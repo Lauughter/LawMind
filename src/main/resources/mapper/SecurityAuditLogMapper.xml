@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.SecurityAuditLogMapper">
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.SecurityAuditLog" useGeneratedKeys="true" keyProperty="id">
+        insert into security_audit_log (user_id, operation_type, description, resource_type, resource_id,
+                                        request_method, request_uri, request_params, client_ip, request_id,
+                                        result, error_message)
+        values (#{userId}, #{operationType}, #{description}, #{resourceType}, #{resourceId},
+                #{requestMethod}, #{requestUri}, #{requestParams}, #{clientIp}, #{requestId},
+                #{result}, #{errorMessage})
+    </insert>
+</mapper>

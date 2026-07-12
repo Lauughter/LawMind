@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.LawFileUploadMapper">
+    <select id="selectAll" resultType="com.lhs.lawmind.entity.LawFileUpload">
+        select * from law_file_upload where is_deleted = 0
+    </select>
+    <select id="selectByUserId" resultType="com.lhs.lawmind.entity.LawFileUpload">
+        select * from law_file_upload where user_id = #{userId} and is_deleted = 0
+    </select>
+    <select id="selectById" resultType="com.lhs.lawmind.entity.LawFileUpload">
+        select * from law_file_upload where id = #{id} and is_deleted = 0
+    </select>
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.LawFileUpload" useGeneratedKeys="true" keyProperty="id">
+        insert into law_file_upload (user_id, knowledge_id, processing_status, file_name, file_type, file_size, file_path, content, ai_review_result, ai_revised_content, risk_level, upload_time)
+        values (#{userId}, #{knowledgeId}, #{processingStatus}, #{fileName}, #{fileType}, #{fileSize}, #{filePath}, #{content}, #{aiReviewResult}, #{aiRevisedContent}, #{riskLevel}, now())
+    </insert>
+    <update id="update" parameterType="com.lhs.lawmind.entity.LawFileUpload">
+        update law_file_upload
+        set user_id = #{userId}, knowledge_id = #{knowledgeId}, processing_status = #{processingStatus}, file_name = #{fileName}, file_type = #{fileType}, file_size = #{fileSize}, file_path = #{filePath}, content = #{content}, ai_review_result = #{aiReviewResult}, ai_revised_content = #{aiRevisedContent}, risk_level = #{riskLevel}
+        where id = #{id}
+    </update>
+    <update id="delete" parameterType="java.lang.Long">
+        update law_file_upload set is_deleted = 1 where id = #{id}
+    </update>
+    <select id="selectPage" resultType="com.lhs.lawmind.entity.LawFileUpload">
+        SELECT * FROM law_file_upload WHERE is_deleted = 0 ORDER BY upload_time DESC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM law_file_upload WHERE is_deleted = 0
+    </select>
+    <select id="selectByUserIdPage" resultType="com.lhs.lawmind.entity.LawFileUpload">
+        SELECT * FROM law_file_upload WHERE user_id = #{userId} AND is_deleted = 0 ORDER BY upload_time DESC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM law_file_upload WHERE user_id = #{userId} AND is_deleted = 0
+    </select>
+</mapper>

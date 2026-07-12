@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.agent.memory.AiMemoryMapper">
+
+    <resultMap id="AiMemoryMap" type="com.lhs.lawmind.agent.memory.AiMemory">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="body" column="body"/>
+        <result property="summary" column="summary"/>
+        <result property="originSessionId" column="origin_session_id"/>
+        <result property="sourceSessionIds" column="source_session_ids"/>
+        <result property="confidence" column="confidence"/>
+        <result property="importance" column="importance"/>
+        <result property="accessCount" column="access_count"/>
+        <result property="embedding" column="embedding"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="lastAccessedAt" column="last_accessed_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.lhs.lawmind.agent.memory.AiMemory"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_memory (user_id, type, title, body, summary,
+            origin_session_id, source_session_ids, confidence, importance,
+            access_count, embedding, created_at, updated_at, last_accessed_at)
+        VALUES (#{userId}, #{type}, #{title}, #{body}, #{summary},
+            #{originSessionId}, #{sourceSessionIds}, #{confidence}, #{importance},
+            #{accessCount}, #{embedding}, NOW(), NOW(), NOW())
+    </insert>
+
+    <select id="selectById" resultMap="AiMemoryMap">
+        SELECT * FROM ai_memory WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserId" resultMap="AiMemoryMap">
+        SELECT * FROM ai_memory
+        WHERE user_id = #{userId}
+        ORDER BY importance DESC, updated_at DESC
+    </select>
+
+    <select id="selectByUserIdAndType" resultMap="AiMemoryMap">
+        SELECT * FROM ai_memory
+        WHERE user_id = #{userId} AND type = #{type}
+        ORDER BY importance DESC, updated_at DESC
+    </select>
+
+    <select id="selectTopByImportance" resultMap="AiMemoryMap">
+        SELECT id, user_id, type, title, importance, created_at
+        FROM ai_memory
+        WHERE user_id = #{userId}
+        ORDER BY importance DESC
+        LIMIT #{limit}
+    </select>
+
+    <update id="update" parameterType="com.lhs.lawmind.agent.memory.AiMemory">
+        UPDATE ai_memory SET
+            title = #{title},
+            body = #{body},
+            summary = #{summary},
+            source_session_ids = #{sourceSessionIds},
+            confidence = #{confidence},
+            importance = #{importance},
+            embedding = #{embedding},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateAccessInfo">
+        UPDATE ai_memory SET
+            access_count = access_count + 1,
+            last_accessed_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM ai_memory WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <delete id="deleteByUserId">
+        DELETE FROM ai_memory WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectForDecay" resultMap="AiMemoryMap">
+        SELECT * FROM ai_memory
+        WHERE user_id = #{userId}
+          AND type = #{type}
+          AND last_accessed_at &lt; #{beforeDate}
+        ORDER BY importance DESC
+    </select>
+
+    <update id="updateImportance">
+        UPDATE ai_memory SET importance = #{importance}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM ai_memory WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectLowestImportance" resultMap="AiMemoryMap">
+        SELECT * FROM ai_memory
+        WHERE user_id = #{userId}
+        ORDER BY importance ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

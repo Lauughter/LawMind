@@ -1,0 +1,41 @@
+# 借款合同专项审查清单
+# 在通用清单基础上叠加以下专项维度
+
+specialized_checklist:
+  contract_type: "借款合同"
+
+  items:
+    - id: LN1
+      dimension: "利率合法性"
+      check_point: "约定利率是否超过 LPR 四倍（民间借贷司法保护上限）；是否有砍头息"
+      severity: CRITICAL
+      legal_ref: "《民法典》第680条、《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》第25条"
+      knowledge_search: "民间借贷 利率 一年期贷款市场报价利率 四倍 LPR 司法保护上限"
+
+    - id: LN2
+      dimension: "砍头息"
+      check_point: "是否存在出借时预扣利息的情形"
+      severity: CRITICAL
+      legal_ref: "《民法典》第670条"
+      knowledge_search: "砍头息 预扣利息 民法典第670条 借款本金 实际借款"
+
+    - id: LN3
+      dimension: "逾期利率"
+      check_point: "逾期利率计算方式是否合法"
+      severity: HIGH
+      legal_ref: "《民法典》第676条"
+      knowledge_search: "逾期利息 逾期利率 民法典第676条 逾期还款 违约责任"
+
+    - id: LN4
+      dimension: "担保条款"
+      check_point: "担保方式（保证/抵押/质押）是否明确；保证方式是否为一般保证或连带责任保证"
+      severity: HIGH
+      legal_ref: "《民法典》第686-690条"
+      knowledge_search: "保证方式 一般保证 连带责任保证 民法典第686条 担保"
+
+    - id: LN5
+      dimension: "复利与罚息"
+      check_point: "是否存在计算复利或过高罚息的条款"
+      severity: MEDIUM
+      legal_ref: "《民法典》第585条"
+      knowledge_search: "复利 罚息 违约金 过高 利息计算 民间借贷"

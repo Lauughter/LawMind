@@ -1,0 +1,228 @@
+spring:
+  application:
+    name: LawMind
+  profiles:
+    active: dev
+  config:
+    import:
+      - classpath:intent-gate.yml
+  datasource:
+    url: jdbc:mysql://localhost:3306/lawmind?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: ${MYSQL_PASSWORD:197058Li}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+      database: 0
+      jedis:
+        pool:
+          enabled: true
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+# Server
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
+# MyBatis
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.lhs.lawmind.entity
+  mapper-locations: classpath:mapper/*.xml
+
+# JWT
+jwt:
+  secret: lawmind_secret_key
+  expire: 7200
+  refresh-expire: 604800
+
+# ========== 日志配置 ==========
+logging:
+  level:
+    dev.langchain4j: INFO
+    org.springframework.web: INFO
+    redis.clients.jedis: INFO
+    org.springframework.data.redis: INFO
+    com.lhs.lawmind.config.RedisConfig: INFO
+
+# LawMind 业务配置
+lawmind:
+  admin-user-id: 4                  # 管理员用户ID，可访问监控/管理接口
+  vectorize:
+    scheduler:
+      enabled: true
+      fixed-delay: 3600000        # 兜底间隔 1 小时（ms），主要靠事件驱动
+      initial-delay: 5000          # 启动后延迟（ms），仅 ApplicationRunner 使用
+      batch-size: 100              # 每批从 DB 拉取的数据条数
+      embed-batch-size: 25         # Embedding API 单次最大条数（DashScope 上限 25）
+      scheduler-lock-key: "law:vectorize:scheduler:lock"  # 调度级分布式锁 Key
+      scheduler-lock-expire: 120   # 调度锁过期时间（秒）
+
+  # 记忆系统配置
+  memory:
+    enabled: true
+    max-per-user: 200
+    retrieval:
+      max-index-items: 30
+      max-auto-inject: 3
+      index-token-budget: 200
+      total-token-budget: 800
+      similarity-threshold: 0.7
+    consolidation:
+      cron: "0 0 3 * * ?"
+      merge-threshold: 0.85
+      min-importance: 0.2
+    decay:
+      project-days: 30
+      reference-days: 60
+      feedback-days: 90
+      user-days: 180
+
+  # 文档分块策略配置
+  chunking:
+    window-size: 768
+    overlap-size: 150
+    max-chunk-size: 3072
+    sub-chunk-threshold: 1500
+
+# ========== LangChain4j DashScope @Key ==========
+langchain4j:
+  dashscope:
+    chat-model:
+      api-key: sk-5efba3d1a796499797ecc5d474d45ec6
+      model-name: qwen-plus
+    streaming-chat-model:
+      api-key: sk-5efba3d1a796499797ecc5d474d45ec6
+      model-name: qwen-plus
+    embedding-model:
+      api-key: sk-5efba3d1a796499797ecc5d474d45ec6
+      model-name: text-embedding-v2
+  redis:
+    dimension: 1536
+
+# ========== RAG知识库检索配置 ==========
+rag:
+  redis:
+    index:
+      law-vector: "idx:law_knowledge"
+      similar-question: "idx:similar_question"
+    key-prefix:
+      hot-question: "hot:question:"
+      law-vector: "law:vector:"
+      similar-question: "similar:question:"
+  threshold:
+    similar-question: 0.85
+    law-knowledge: 0.55
+    filter: 0.40
+  hot-cache:
+    initial-ttl-days: 30
+    eviction-days: 7
+  hot-threshold:
+    5-minutes: 3
+    1-hour: 10
+    1-day: 30
+  vector:
+    dimension: 1536
+  search:
+    top-k: 15
+    hybrid:
+      enabled: true
+    mmr:
+      enabled: true
+      lambda: 0.85
+    hyde:
+      enabled: false
+    rerank:
+      enabled: true
+      api-key: sk-5efba3d1a796499797ecc5d474d45ec6
+      model: qwen3-rerank
+      top-n: 10
+      candidate-top-k: 30
+  dedup:
+    enabled: true
+    threshold: 0.92
+  citation:
+    verification:
+      enabled: true
+  conversation:
+    max-history-messages: 10
+  auto-learning:
+    enabled: false
+    batch-size: 10
+    cron: "0 0 2 * * ?"
+
+# ========== Agent 上下文压缩配置 ==========
+  agent:
+    compression:
+      enabled: true
+      single-result-threshold: 500
+      total-context-threshold: 6000
+      min-savings-ratio: 2.0
+      tool-strategies:
+        searchLawKnowledge:
+          layer: 1
+          compress: true
+          max-results: 5
+          full-detail-top: 3
+          preserve-original-terms: false
+        getArticleText:
+          layer: 0
+          compress: true
+          max-results: 0
+          full-detail-top: 0
+          preserve-original-terms: true
+        searchSimilarQuestions:
+          layer: 1
+          compress: true
+          max-results: 3
+          full-detail-top: 2
+          preserve-original-terms: false
+        classifyLegalIntent:
+          layer: 0
+          compress: false
+          max-results: 0
+          full-detail-top: 0
+          preserve-original-terms: false
+        expandLegalQuery:
+          layer: 0
+          compress: false
+          max-results: 0
+          full-detail-top: 0
+          preserve-original-terms: false
+        verifyCitation:
+          layer: 0
+          compress: false
+          max-results: 0
+          full-detail-top: 0
+          preserve-original-terms: false
+      recency:
+        keep-full-recent: 2
+        layer1-start-round: 3
+        layer2-start-round: 5
+      knowledge-state:
+        enabled: true
+        max-articles: 20
+        merge-duplicates: true
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

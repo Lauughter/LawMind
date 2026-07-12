@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.ConversationMapper">
+
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.Conversation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO conversation (user_id, title, create_time, update_time, is_deleted)
+        VALUES (#{userId}, #{title}, NOW(), NOW(), 0)
+    </insert>
+
+    <select id="selectById" resultType="com.lhs.lawmind.entity.Conversation">
+        SELECT * FROM conversation WHERE id = #{id} AND is_deleted = 0
+    </select>
+
+    <select id="selectByUserId" resultType="com.lhs.lawmind.entity.Conversation">
+        SELECT * FROM conversation
+        WHERE user_id = #{userId} AND is_deleted = 0
+        ORDER BY update_time DESC
+    </select>
+
+    <update id="updateTitle">
+        UPDATE conversation SET title = #{title}, update_time = NOW()
+        WHERE id = #{id} AND is_deleted = 0
+    </update>
+
+    <update id="softDelete">
+        UPDATE conversation SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <update id="updateUpdateTime">
+        UPDATE conversation SET update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="selectByUserIdPage" resultType="com.lhs.lawmind.entity.Conversation">
+        SELECT * FROM conversation
+        WHERE user_id = #{userId} AND is_deleted = 0
+        ORDER BY update_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM conversation WHERE user_id = #{userId} AND is_deleted = 0
+    </select>
+
+</mapper>

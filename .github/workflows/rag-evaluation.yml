@@ -1,0 +1,82 @@
+name: RAG Quality Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset_path:
+        description: 'Golden Dataset file path'
+        default: 'docs/golden-dataset-rag-evaluation.json'
+        required: false
+  pull_request:
+    paths:
+      - 'src/main/java/com/lhs/lawmind/service/impl/RagServiceImpl.java'
+      - 'src/main/java/com/lhs/lawmind/config/RagConfig.java'
+      - 'src/main/resources/application.yml'
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis/redis-stack:latest
+        ports:
+          - 6379:6379
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: lawmind
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -proot --silent; then
+              echo "MySQL ready"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+      - name: Run schema migrations
+        run: |
+          for f in src/main/resources/sql/V*.sql; do
+            mysql -h 127.0.0.1 -u root -proot lawmind < "$f" 2>/dev/null || true
+          done
+      - name: Run Evaluation Tests
+        id: eval
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/lawmind?useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root
+          SPRING_DATA_REDIS_HOST: 127.0.0.1
+          SPRING_DATA_REDIS_PORT: 6379
+        run: mvn test -P evaluation -q 2>&1 | tail -50
+      - name: Regression Gate
+        if: always() && steps.eval.outcome == 'success'
+        run: |
+          python3 scripts/compare_eval_results.py --report target/evaluation/golden-eval-report.json
+      - name: Upload Evaluation Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: target/evaluation/golden-eval-report.json
+          retention-days: 30

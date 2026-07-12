@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.LawKnowledgeMapper">
+    <select id="selectAll" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where is_deleted = 0
+    </select>
+
+    <select id="selectPage" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectByLawType" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where law_type = #{lawType} and is_deleted = 0
+    </select>
+
+    <select id="selectByLawTypeWithPage" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where law_type = #{lawType} and is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+<!-- 语义检索相关法条，根据标题和内容模糊查询，返回分页结果集，每个结果包含 id, title, content, law_type, create_time, vector_status 字段 -->
+    <select id="search" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where (title like concat('%', #{keyword}, '%') or content like concat('%', #{keyword}, '%')) and is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchByKeywordAndType" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where (title like concat('%', #{keyword}, '%') or content like concat('%', #{keyword}, '%')) and law_type = #{lawType} and is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="count" resultType="java.lang.Long">
+        select count(*) from law_knowledge where is_deleted = 0
+    </select>
+
+    <select id="countByLawType" resultType="java.lang.Long">
+        select count(*) from law_knowledge where law_type = #{lawType} and is_deleted = 0
+    </select>
+
+    <select id="countByKeyword" resultType="java.lang.Long">
+        select count(*) from law_knowledge where (title like concat('%', #{keyword}, '%') or content like concat('%', #{keyword}, '%')) and is_deleted = 0
+    </select>
+
+    <select id="countByKeywordAndType" resultType="java.lang.Long">
+        select count(*) from law_knowledge where (title like concat('%', #{keyword}, '%') or content like concat('%', #{keyword}, '%')) and law_type = #{lawType} and is_deleted = 0
+    </select>
+
+    <!-- 多词搜索：所有词必须同时匹配（AND 逻辑） -->
+    <select id="searchMultiTerm" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where is_deleted = 0
+        <foreach collection="terms" item="term">
+            and (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+        </foreach>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchByKeywordAndTypeMultiTerm" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where law_type = #{lawType} and is_deleted = 0
+        <foreach collection="terms" item="term">
+            and (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+        </foreach>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByMultiTerm" resultType="java.lang.Long">
+        select count(*) from law_knowledge where is_deleted = 0
+        <foreach collection="terms" item="term">
+            and (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+        </foreach>
+    </select>
+
+    <select id="countByKeywordAndTypeMultiTerm" resultType="java.lang.Long">
+        select count(*) from law_knowledge where law_type = #{lawType} and is_deleted = 0
+        <foreach collection="terms" item="term">
+            and (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+        </foreach>
+    </select>
+
+    <!-- 多关键词 OR LIKE 搜索：任一关键词匹配即命中（全文检索降级兜底） -->
+    <select id="searchOrTerms" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where is_deleted = 0
+        and (
+            <foreach collection="terms" item="term" separator=" OR ">
+                (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+            </foreach>
+        )
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchByKeywordAndTypeOrTerms" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where law_type = #{lawType} and is_deleted = 0
+        and (
+            <foreach collection="terms" item="term" separator=" OR ">
+                (title like concat('%', #{term}, '%') or content like concat('%', #{term}, '%'))
+            </foreach>
+        )
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectById" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where id = #{id} and is_deleted = 0
+    </select>
+
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.LawKnowledge" useGeneratedKeys="true" keyProperty="id">
+        insert into law_knowledge (title, chapter, `section`, article_number, content, law_type, effective_date, expiry_date, status, source, publisher, publish_date, user_id, create_time)
+        values (#{title}, #{chapter}, #{section}, #{articleNumber}, #{content}, #{lawType}, #{effectiveDate}, #{expiryDate}, #{status}, #{source}, #{publisher}, #{publishDate}, #{userId}, now())
+    </insert>
+
+    <update id="update" parameterType="com.lhs.lawmind.entity.LawKnowledge">
+        update law_knowledge
+        set title = #{title}, chapter = #{chapter}, section = #{section},
+            article_number = #{articleNumber}, content = #{content}, law_type = #{lawType},
+            vector_status = #{vectorStatus}, status = #{status},
+            effective_date = #{effectiveDate}, expiry_date = #{expiryDate},
+            publisher = #{publisher}, publish_date = #{publishDate}
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.Long">
+        update law_knowledge set is_deleted = 1 where id = #{id}
+    </delete>
+
+    <!-- FULLTEXT 全文搜索（ngram 分词，支持中文） -->
+    <select id="searchFulltext" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where MATCH(title, content) AGAINST(#{booleanQuery} IN BOOLEAN MODE) and is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchByKeywordAndTypeFulltext" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where MATCH(title, content) AGAINST(#{booleanQuery} IN BOOLEAN MODE) and law_type = #{lawType} and is_deleted = 0 limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchFulltextFiltered" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where MATCH(title, content) AGAINST(#{booleanQuery} IN BOOLEAN MODE) and status = 'EFFECTIVE' and is_deleted = 0
+        <if test="lawType != null and lawType != ''">
+            and law_type = #{lawType}
+        </if>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="searchFulltextFilteredNatural" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where MATCH(title, content) AGAINST(#{query} IN NATURAL LANGUAGE MODE) and status = 'EFFECTIVE' and is_deleted = 0
+        <if test="lawType != null and lawType != ''">
+            and law_type = #{lawType}
+        </if>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByKeywordFulltext" resultType="java.lang.Long">
+        select count(*) from law_knowledge where MATCH(title, content) AGAINST(#{booleanQuery} IN BOOLEAN MODE) and is_deleted = 0
+    </select>
+
+    <select id="countByKeywordAndTypeFulltext" resultType="java.lang.Long">
+        select count(*) from law_knowledge where MATCH(title, content) AGAINST(#{booleanQuery} IN BOOLEAN MODE) and law_type = #{lawType} and is_deleted = 0
+    </select>
+
+    <select id="selectUnvectorized" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where vector_status = 0 and is_deleted = 0 limit 100
+    </select>
+    <select id="selectUnvectorizedWithOffset" resultType="com.lhs.lawmind.entity.LawKnowledge">
+        select * from law_knowledge where vector_status = 0 and is_deleted = 0 limit #{offset}, #{limit}
+    </select>
+
+    <select id="countUnvectorized" resultType="java.lang.Long">
+        select count(*) from law_knowledge where vector_status = 0 and is_deleted = 0
+    </select>
+
+    <update id="batchUpdateVectorStatus">
+        update law_knowledge set vector_status = #{status} where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and is_deleted = 0
+    </update>
+</mapper>

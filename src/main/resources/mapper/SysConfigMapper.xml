@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.SysConfigMapper">
+    <select id="selectAll" resultType="com.lhs.lawmind.entity.SysConfig">
+        select * from sys_config
+    </select>
+    <select id="selectAllPage" resultType="com.lhs.lawmind.entity.SysConfig">
+        select * from sys_config order by id desc LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAll" resultType="long">
+        select count(*) from sys_config
+    </select>
+    <select id="selectByKey" resultType="com.lhs.lawmind.entity.SysConfig">
+        select * from sys_config where config_key = #{configKey}
+    </select>
+    <select id="selectById" resultType="com.lhs.lawmind.entity.SysConfig">
+        select * from sys_config where id = #{id}
+    </select>
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.SysConfig">
+        insert into sys_config (config_key, config_value, description, create_time)
+        values (#{configKey}, #{configValue}, #{description}, now())
+    </insert>
+    <update id="update" parameterType="com.lhs.lawmind.entity.SysConfig">
+        update sys_config
+        set config_key = #{configKey}, config_value = #{configValue}, description = #{description}
+        where id = #{id}
+    </update>
+    <update id="delete" parameterType="java.lang.Long">
+        delete from sys_config where id = #{id}
+    </update>
+</mapper>

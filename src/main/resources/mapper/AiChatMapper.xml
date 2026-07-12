@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.AiChatMapper">
+    <select id="selectAll" resultType="com.lhs.lawmind.entity.AiChat">
+        select * from ai_chat
+    </select>
+    <select id="selectByUserId" resultType="com.lhs.lawmind.entity.AiChat">
+        select * from ai_chat where user_id = #{userId} order by create_time asc
+    </select>
+    <select id="selectByConversationId" resultType="com.lhs.lawmind.entity.AiChat">
+        select * from ai_chat where conversation_id = #{conversationId} order by create_time asc
+    </select>
+    <select id="selectById" resultType="com.lhs.lawmind.entity.AiChat">
+        select * from ai_chat where id = #{id}
+    </select>
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.AiChat" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_chat (user_id, conversation_id, user_question, ai_answer, knowledge_match,
+                             token_usage_input, token_usage_output, estimated_cost,
+                             feedback_content, create_time)
+        values (#{userId}, #{conversationId}, #{userQuestion}, #{aiAnswer}, #{knowledgeMatch},
+                #{tokenUsageInput}, #{tokenUsageOutput}, #{estimatedCost},
+                #{feedbackContent}, now())
+    </insert>
+    <update id="update" parameterType="com.lhs.lawmind.entity.AiChat">
+        update ai_chat
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="conversationId != null">conversation_id = #{conversationId},</if>
+            <if test="userQuestion != null">user_question = #{userQuestion},</if>
+            <if test="aiAnswer != null">ai_answer = #{aiAnswer},</if>
+            <if test="knowledgeMatch != null">knowledge_match = #{knowledgeMatch},</if>
+            <if test="tokenUsageInput != null">token_usage_input = #{tokenUsageInput},</if>
+            <if test="tokenUsageOutput != null">token_usage_output = #{tokenUsageOutput},</if>
+            <if test="estimatedCost != null">estimated_cost = #{estimatedCost},</if>
+            <if test="feedbackContent != null">feedback_content = #{feedbackContent}</if>
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from ai_chat where id = #{id}
+    </delete>
+    <!-- 从数据库中查询高频率未命中问题 -->
+    <!-- LIMIT 限制返回数量 -->
+    <select id="selectHighFrequencyUnmatched" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM ai_chat 
+        WHERE knowledge_match IS NULL OR knowledge_match = '[]' OR knowledge_match = '{}'
+        ORDER BY create_time DESC
+        LIMIT #{limit}
+    </select>
+    <!-- 查询会话最近 N 条消息（用于多轮对话上下文） -->
+    <select id="selectRecentByConversationId" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM (
+            SELECT * FROM ai_chat
+            WHERE conversation_id = #{conversationId}
+            ORDER BY create_time DESC
+            LIMIT #{limit}
+        ) t ORDER BY t.create_time ASC
+    </select>
+    <!-- 更新用户反馈 -->
+    <update id="updateFeedback">
+        UPDATE ai_chat SET feedback = #{feedback} WHERE id = #{id}
+    </update>
+    <select id="selectPage" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM ai_chat ORDER BY create_time DESC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM ai_chat
+    </select>
+    <select id="selectByUserIdPage" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM ai_chat WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*) FROM ai_chat WHERE user_id = #{userId}
+    </select>
+    <select id="selectPendingReviewPage" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM ai_chat
+        WHERE feedback_status = 'PENDING_REVIEW'
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countPendingReview" resultType="long">
+        SELECT COUNT(*) FROM ai_chat WHERE feedback_status = 'PENDING_REVIEW'
+    </select>
+    <update id="updateReview">
+        UPDATE ai_chat
+        SET feedback_status = #{feedbackStatus},
+            reviewed_by = #{reviewedBy},
+            reviewed_at = NOW(),
+            review_notes = #{reviewNotes}
+        WHERE id = #{id}
+    </update>
+    <select id="selectByConversationIdPage" resultType="com.lhs.lawmind.entity.AiChat">
+        SELECT * FROM ai_chat WHERE conversation_id = #{conversationId} ORDER BY create_time ASC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countByConversationId" resultType="long">
+        SELECT COUNT(*) FROM ai_chat WHERE conversation_id = #{conversationId}
+    </select>
+    <update id="updateFeedbackContent">
+        UPDATE ai_chat SET feedback_content = #{feedbackContent} WHERE id = #{id}
+    </update>
+</mapper>

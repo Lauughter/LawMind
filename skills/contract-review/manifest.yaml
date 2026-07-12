@@ -1,0 +1,11 @@
+# 合同审查 Skill 元数据
+name: contract-review
+version: 1.0.0
+description: 智能合同审查技能包 — 对用户上传的合同进行逐条合法性、公平性和完整性分析
+trigger_intent: CONTRACT_REVIEW
+required_tools:
+  - LawKnowledgeService.search
+  - CaseSearchService.search
+knowledge_search_required: true
+model: qwen-plus
+max_iterations: 10

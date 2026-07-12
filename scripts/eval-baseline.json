@@ -1,0 +1,18 @@
+{
+  "_comment": "Golden Dataset 评估基线。首次评估后由 compare_eval_results.py 自动生成。",
+  "_note": "运行 python scripts/compare_eval_results.py --update-baseline 可手动更新基线。",
+  "generatedAt": "",
+  "totalCases": 0,
+  "passedCases": 0,
+  "failedCases": 0,
+  "sourceMatch": 0.50,
+  "keywordRecall": 0.40,
+  "lawTypeMatch": 0.50,
+  "answerMinLength": 0.80,
+  "forbiddenContentClean": 0.95,
+  "minRetrievalOk": 0.80,
+  "faithfulness": 0.50,
+  "answerRelevance": 0.50,
+  "totalScore": 0.40,
+  "passedRate": 0.50
+}

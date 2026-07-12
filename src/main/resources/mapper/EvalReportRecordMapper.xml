@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.EvalReportRecordMapper">
+
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.EvalReportRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO evaluation_report (
+            run_id, dataset_path, dataset_version, total_cases, passed_cases, failed_cases,
+            avg_keyword_recall, avg_source_match, avg_law_type_match, avg_answer_length,
+            avg_total_score, avg_faithfulness, avg_answer_relevance, report_json
+        ) VALUES (
+            #{runId}, #{datasetPath}, #{datasetVersion}, #{totalCases}, #{passedCases}, #{failedCases},
+            #{avgKeywordRecall}, #{avgSourceMatch}, #{avgLawTypeMatch}, #{avgAnswerLength},
+            #{avgTotalScore}, #{avgFaithfulness}, #{avgAnswerRelevance}, #{reportJson}
+        )
+    </insert>
+
+    <select id="selectRecent" resultType="com.lhs.lawmind.entity.EvalReportRecord">
+        SELECT * FROM evaluation_report ORDER BY created_at DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectByRunId" resultType="com.lhs.lawmind.entity.EvalReportRecord">
+        SELECT * FROM evaluation_report WHERE run_id = #{runId}
+    </select>
+
+</mapper>

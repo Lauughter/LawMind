@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.ReviewLogMapper">
+
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.ReviewLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review_log (chat_id, question, action_type, action_detail, feedback_reason, processed)
+        VALUES (#{chatId}, #{question}, #{actionType}, #{actionDetail}, #{feedbackReason}, #{processed})
+    </insert>
+
+    <select id="selectUnprocessed" resultType="com.lhs.lawmind.entity.ReviewLog">
+        SELECT * FROM review_log WHERE processed = 0 ORDER BY created_at ASC
+    </select>
+
+    <update id="markProcessed">
+        UPDATE review_log SET processed = 1, processed_at = NOW() WHERE id = #{id}
+    </update>
+
+</mapper>

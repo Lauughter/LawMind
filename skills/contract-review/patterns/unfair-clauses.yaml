@@ -1,0 +1,59 @@
+# 常见不公平条款模式库
+# Agent 在审查过程中检测到匹配模式时，应以 knowledge_search 关键词检索知识库验证
+
+patterns:
+  - id: UNILATERAL_INTERPRETATION
+    keywords: ["最终解释权归", "本公司保留最终解释权", "甲方拥有最终解释权"]
+    legal_basis: "《民法典》第496条 — 格式条款提供方不得利用格式条款排除对方主要权利"
+    knowledge_search: "格式条款 无效 最终解释权 民法典第496条 第497条"
+    severity: CRITICAL
+    suggestion: "删除该条款；合同解释应遵循《民法典》第142条、第466条的通常解释原则"
+
+  - id: EXCESSIVE_LIQUIDATED_DAMAGES
+    keywords: ["违约金.*(?:三倍|五倍|十倍)", "每日.*%.*违约金", "违约金.*总价", "赔偿.*.*倍"]
+    legal_basis: "《民法典》第585条 — 违约金过高的，当事人可以请求人民法院减少"
+    knowledge_search: "违约金 过高 调整 民法典第585条 实际损失 百分之三十"
+    severity: HIGH
+    suggestion: "建议将违约金调整为实际损失的30%以内，或改为按实际损失计算"
+
+  - id: UNILATERAL_TERMINATION
+    keywords: ["甲方有权随时(解除|终止)", "乙方不得(单方)?解除", "甲方可单方面(解除|终止)"]
+    legal_basis: "《民法典》第563条 — 合同解除权应基于法定或约定条件"
+    knowledge_search: "合同解除权 法定解除 民法典第563条 单方解除 效力"
+    severity: CRITICAL
+    suggestion: "明确解除合同的具体条件和程序，双方解除权应对等"
+
+  - id: WAIVER_OF_RIGHTS
+    keywords: ["放弃(诉讼|仲裁|索赔|追索)", "不得(起诉|申请仲裁|追偿)", "自愿放弃.*权利"]
+    legal_basis: "《民法典》第197条 — 诉讼时效的约定无效；诉权不得预先放弃"
+    knowledge_search: "诉权 预先放弃 无效 民法典第197条 诉讼时效 法定权利"
+    severity: CRITICAL
+    suggestion: "删除该条款；诉权是法定权利，不得通过约定预先放弃"
+
+  - id: AMBIGUOUS_OBLIGATIONS
+    keywords: ["尽力(配合|协助|完成)", "尽最大努力", "合理期限内", "必要时", "视情况而定"]
+    legal_basis: "《民法典》第510条 — 约定不明确的，可以协议补充"
+    knowledge_search: "合同约定不明确 补充协议 民法典第510条 交易习惯 履行标准"
+    severity: MEDIUM
+    suggestion: "明确具体的行为标准、期限和完成标志，避免使用模糊表述"
+
+  - id: UNFAIR_GOVERNING_LAW
+    keywords: ["由甲方所在地(法院|仲裁委)", "在.*所在地(起诉|仲裁)", "由.*方指定.*管辖"]
+    legal_basis: "《民事诉讼法》第24条 — 合同纠纷由被告住所地或合同履行地管辖"
+    knowledge_search: "合同纠纷 管辖 被告住所地 民事诉讼法第24条 约定管辖 效力"
+    severity: MEDIUM
+    suggestion: "争取约定己方所在地管辖，或选择中立第三地"
+
+  - id: AUTOMATIC_RENEWAL_TRAP
+    keywords: ["到期.*自动(续期|续约|续签)", "未提出异议.*视为(同意|续约)", "期满.*自动.*延(长|续)"]
+    legal_basis: "《民法典》第496条 — 格式条款应以合理方式提示对方注意"
+    knowledge_search: "自动续约 格式条款 提示义务 民法典第496条 默示同意"
+    severity: HIGH
+    suggestion: "明确续约需双方另行书面确认；如保留自动续约，应设置到期前不少于30天的书面通知机制"
+
+  - id: UNLIMITED_LIABILITY
+    keywords: ["承担.*全部.*责任", "赔偿.*所有.*损失", "无限制.*责任", "无限.*赔偿"]
+    legal_basis: "《民法典》第584条 — 损失赔偿额应当相当于因违约所造成的损失"
+    knowledge_search: "违约责任 损失赔偿 可预见规则 民法典第584条 赔偿范围"
+    severity: HIGH
+    suggestion: "明确赔偿范围和上限，区分直接损失和间接损失"

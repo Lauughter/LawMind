@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.KnowledgeChunkMapper">
+
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.KnowledgeChunk" useGeneratedKeys="true" keyProperty="id">
+        insert into knowledge_chunk (knowledge_id, chunk_index, content, context_prefix, vector_status, retry_count, create_time)
+        values (#{knowledgeId}, #{chunkIndex}, #{content}, #{contextPrefix}, #{vectorStatus}, #{retryCount}, now())
+    </insert>
+
+    <update id="update" parameterType="com.lhs.lawmind.entity.KnowledgeChunk">
+        update knowledge_chunk
+        set vector_status = #{vectorStatus},
+            error_msg = #{errorMsg},
+            retry_count = #{retryCount},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultType="com.lhs.lawmind.entity.KnowledgeChunk">
+        select * from knowledge_chunk where id = #{id}
+    </select>
+
+    <select id="selectByKnowledgeId" resultType="com.lhs.lawmind.entity.KnowledgeChunk">
+        select * from knowledge_chunk where knowledge_id = #{knowledgeId} order by chunk_index
+    </select>
+
+    <select id="selectUnvectorizedWithOffset" resultType="com.lhs.lawmind.entity.KnowledgeChunk">
+        select * from knowledge_chunk where vector_status = 0 limit #{offset}, #{limit}
+    </select>
+
+    <select id="countUnvectorized" resultType="java.lang.Long">
+        select count(*) from knowledge_chunk where vector_status = 0
+    </select>
+
+    <update id="batchUpdateVectorStatus">
+        update knowledge_chunk set vector_status = #{status} where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

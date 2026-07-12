@@ -1,0 +1,48 @@
+# 租赁合同专项审查清单
+# 在通用清单基础上叠加以下专项维度
+
+specialized_checklist:
+  contract_type: "房屋租赁合同"
+
+  items:
+    - id: R1
+      dimension: "租赁期限"
+      check_point: "租赁期限是否超过20年（超过部分无效）；是否约定续租条件"
+      severity: HIGH
+      legal_ref: "《民法典》第705条"
+      knowledge_search: "租赁期限 二十年 民法典第705条 超过 续租"
+
+    - id: R2
+      dimension: "维修责任"
+      check_point: "维修责任归属是否明确（出租人承担维修义务，另有约定除外）"
+      severity: HIGH
+      legal_ref: "《民法典》第712条"
+      knowledge_search: "租赁物维修 出租人维修义务 民法典第712条 维修责任"
+
+    - id: R3
+      dimension: "转租条件"
+      check_point: "是否允许转租；转租是否需要出租人同意"
+      severity: MEDIUM
+      legal_ref: "《民法典》第716条"
+      knowledge_search: "转租 出租人同意 民法典第716条 次承租人"
+
+    - id: R4
+      dimension: "押金退还"
+      check_point: "押金退还条件是否明确、合理；是否有不合理的扣押条款"
+      severity: HIGH
+      legal_ref: "《民法典》第714条"
+      knowledge_search: "押金 退还 租赁合同 返还 租赁物"
+
+    - id: R5
+      dimension: "涨租条款"
+      check_point: "租金调整机制是否合理；是否有限制涨租幅度的约定"
+      severity: MEDIUM
+      legal_ref: "《民法典》第513条"
+      knowledge_search: "租金调整 涨租 变更合同 租赁合同 合理"
+
+    - id: R6
+      dimension: "买卖不破租赁"
+      check_point: "是否约定租赁期间房屋出售时承租人权利保护"
+      severity: MEDIUM
+      legal_ref: "《民法典》第725条"
+      knowledge_search: "买卖不破租赁 民法典第725条 承租人 所有权变动"

@@ -1,0 +1,402 @@
+[
+  {
+    "id": "G001",
+    "question": "加班不给加班费怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "easy",
+    "key_points": ["加班费", "用人单位支付义务", "维权途径"],
+    "expected_answer_contains": ["加班费", "用人单位", "劳动仲裁"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G002",
+    "question": "被公司无故辞退能获得什么赔偿？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动合同法",
+    "difficulty": "medium",
+    "key_points": ["经济补偿金", "违法解除", "赔偿标准", "N+1"],
+    "expected_answer_contains": ["经济补偿", "赔偿", "劳动合同法"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G003",
+    "question": "工伤认定的标准是什么？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "medium",
+    "key_points": ["工作时间", "工作场所", "工作原因", "认定程序"],
+    "expected_answer_contains": ["工伤", "工作", "认定"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G004",
+    "question": "试用期最长可以多久？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动合同法",
+    "difficulty": "easy",
+    "key_points": ["试用期期限", "合同期限", "3年", "6个月"],
+    "expected_answer_contains": ["试用期", "劳动合同法", "不得超过"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G005",
+    "question": "公司不交社保怎么维权？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国社会保险法",
+    "difficulty": "easy",
+    "key_points": ["社保缴纳义务", "投诉举报", "社保稽查"],
+    "expected_answer_contains": ["社会保险", "用人单位", "举报"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G006",
+    "question": "劳动者得了职业病怎么赔偿？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "medium",
+    "key_points": ["职业病", "工伤保险", "赔偿标准", "鉴定"],
+    "expected_answer_contains": ["职业病", "工伤保险", "赔偿"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G007",
+    "question": "被拖欠三个月工资该怎么处理？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "easy",
+    "key_points": ["拖欠工资", "劳动监察", "仲裁", "利息"],
+    "expected_answer_contains": ["拖欠", "工资", "劳动监察"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G008",
+    "question": "离婚财产怎么分割？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["共同财产", "个人财产", "分割原则", "过错方"],
+    "expected_answer_contains": ["财产", "分割", "民法典"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G009",
+    "question": "租的房子漏水房东不修怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "easy",
+    "key_points": ["租赁合同", "修缮义务", "减租", "损害赔偿"],
+    "expected_answer_contains": ["租赁", "修缮", "房东"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G010",
+    "question": "朋友借钱不还，没有借条能起诉吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["民间借贷", "证据", "转账记录", "诉讼时效"],
+    "expected_answer_contains": ["借贷", "证据", "诉讼"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G011",
+    "question": "被诈骗了应该怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国反电信网络诈骗法",
+    "difficulty": "easy",
+    "key_points": ["报警", "证据保留", "冻结账户", "追回"],
+    "expected_answer_contains": ["报警", "诈骗", "证据"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G012",
+    "question": "买到假货能要求退一赔三吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国消费者权益保护法",
+    "difficulty": "easy",
+    "key_points": ["欺诈", "退一赔三", "500元最低赔偿"],
+    "expected_answer_contains": ["退一赔三", "消费者", "欺诈"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G013",
+    "question": "食品吃出异物可以索赔多少？",
+    "intent": "CALCULATION",
+    "expected_law_type": "中华人民共和国消费者权益保护法",
+    "difficulty": "medium",
+    "key_points": ["食品安全法", "十倍赔偿", "1000元最低"],
+    "expected_answer_contains": ["赔偿", "食品安全", "十倍"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G014",
+    "question": "在商场摔伤商场有责任吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["安全保障义务", "侵权责任", "赔偿"],
+    "expected_answer_contains": ["安全保障", "责任", "赔偿"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G015",
+    "question": "离婚后孩子抚养权归谁？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["抚养权", "最有利于子女", "2岁原则", "8岁征求意见"],
+    "expected_answer_contains": ["抚养权", "子女", "法院"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G016",
+    "question": "老人去世没有遗嘱，遗产怎么分？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["法定继承", "继承顺序", "配偶子女父母"],
+    "expected_answer_contains": ["继承", "法定继承", "第一顺序"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G017",
+    "question": "被打了报警有用吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国治安管理处罚法",
+    "difficulty": "easy",
+    "key_points": ["治安处罚", "故意伤害", "伤情鉴定", "轻伤"],
+    "expected_answer_contains": ["报警", "伤情", "治安"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G018",
+    "question": "打架致人轻伤会被判刑吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国刑法",
+    "difficulty": "medium",
+    "key_points": ["故意伤害罪", "轻伤", "三年以下", "赔偿谅解"],
+    "expected_answer_contains": ["故意伤害", "轻伤", "刑法"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G019",
+    "question": "正当防卫的标准是什么？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国刑法",
+    "difficulty": "hard",
+    "key_points": ["正在进行", "不法侵害", "必要限度", "防卫过当"],
+    "expected_answer_contains": ["正当防卫", "不法侵害", "限度"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G020",
+    "question": "自首能减刑吗？能减多少？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国刑法",
+    "difficulty": "medium",
+    "key_points": ["自首", "从轻减轻", "如实供述"],
+    "expected_answer_contains": ["自首", "减轻", "从轻"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G021",
+    "question": "车祸对方全责不赔钱怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国道路交通安全法",
+    "difficulty": "medium",
+    "key_points": ["交通事故", "全责", "保险理赔", "诉讼"],
+    "expected_answer_contains": ["交通事故", "赔偿", "保险"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G022",
+    "question": "酒驾和醉驾的区别及处罚是什么？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国道路交通安全法",
+    "difficulty": "medium",
+    "key_points": ["20mg", "80mg", "行政拘留", "刑事处罚"],
+    "expected_answer_contains": ["酒驾", "醉驾", "处罚"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G023",
+    "question": "交通肇事逃逸会怎么判？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国道路交通安全法",
+    "difficulty": "medium",
+    "key_points": ["逃逸", "加重处罚", "吊销驾照", "终身禁驾"],
+    "expected_answer_contains": ["逃逸", "吊销", "处罚"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G024",
+    "question": "公司股东卷钱跑了怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国公司法",
+    "difficulty": "medium",
+    "key_points": ["股东责任", "公司法人独立", "股东出资", "追责"],
+    "expected_answer_contains": ["股东", "公司", "责任"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G025",
+    "question": "公司破产清算员工工资能优先拿吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国公司法",
+    "difficulty": "medium",
+    "key_points": ["破产清算", "工资优先权", "清偿顺序"],
+    "expected_answer_contains": ["破产", "工资", "优先"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G026",
+    "question": "合伙人之间没有协议怎么处理纠纷？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "hard",
+    "key_points": ["合伙", "口头协议", "实际履行", "散伙清算"],
+    "expected_answer_contains": ["合伙", "协议", "纠纷"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G027",
+    "question": "个人信息被泄露怎么维权？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国个人信息保护法",
+    "difficulty": "easy",
+    "key_points": ["信息泄露", "通知义务", "损害赔偿", "投诉"],
+    "expected_answer_contains": ["个人信息", "泄露", "维权"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G028",
+    "question": "APP未经同意收集个人信息合法吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国个人信息保护法",
+    "difficulty": "easy",
+    "key_points": ["知情同意", "最小必要", "撤回同意"],
+    "expected_answer_contains": ["同意", "个人信息", "合法"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G029",
+    "question": "人脸识别数据被商家擅自采集怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国个人信息保护法",
+    "difficulty": "medium",
+    "key_points": ["敏感信息", "单独同意", "公共场所", "禁止"],
+    "expected_answer_contains": ["敏感", "人脸", "同意"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G030",
+    "question": "社保断缴了几年还能补缴吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国社会保险法",
+    "difficulty": "medium",
+    "key_points": ["补缴", "滞纳金", "连续缴费", "年限"],
+    "expected_answer_contains": ["补缴", "社会保险", "缴费"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G031",
+    "question": "电信诈骗报案后钱能追回来吗？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国反电信网络诈骗法",
+    "difficulty": "medium",
+    "key_points": ["紧急止付", "冻结", "追赃", "公安机关"],
+    "expected_answer_contains": ["冻结", "追回", "报案"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G032",
+    "question": "肖像权被侵犯怎么维权？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["肖像权", "商业使用", "停止侵害", "赔偿"],
+    "expected_answer_contains": ["肖像权", "侵害", "赔偿"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G033",
+    "question": "商标被抢注了怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "hard",
+    "key_points": ["商标注册", "在先权利", "异议", "无效宣告"],
+    "expected_answer_contains": ["商标", "注册", "权利"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G034",
+    "question": "劳动法第三十九条规定的解除情形是什么？",
+    "intent": "ARTICLE_LOOKUP",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "easy",
+    "key_points": ["第三十九条", "用人单位单方解除", "严重违纪"],
+    "expected_answer_contains": ["第三十九条", "解除", "劳动合同"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G035",
+    "question": "民法典关于高空抛物的规定是什么？",
+    "intent": "ARTICLE_LOOKUP",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "hard",
+    "key_points": ["高空抛物", "侵权责任", "物业服务企业", "公安调查"],
+    "expected_answer_contains": ["高空抛物", "责任", "调查"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G036",
+    "question": "工伤九级伤残能赔多少钱？",
+    "intent": "CALCULATION",
+    "expected_law_type": "中华人民共和国劳动法",
+    "difficulty": "hard",
+    "key_points": ["九级伤残", "一次性伤残补助金", "9个月工资"],
+    "expected_answer_contains": ["伤残", "赔偿", "工资"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G037",
+    "question": "今天天气怎么样？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": null,
+    "difficulty": "easy",
+    "key_points": ["非法律问题", "拒绝回答"],
+    "expected_answer_contains": ["法律", "咨询"],
+    "source_requirement": "non_legal_reject"
+  },
+  {
+    "id": "G038",
+    "question": "你好，你是谁？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": null,
+    "difficulty": "easy",
+    "key_points": ["非法律问题", "拒绝回答"],
+    "expected_answer_contains": ["法律", "咨询"],
+    "source_requirement": "non_legal_reject"
+  },
+  {
+    "id": "G039",
+    "question": "楼下装修太吵，能不能告他？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "easy",
+    "key_points": ["邻里纠纷", "噪音", "相邻权", "物业"],
+    "expected_answer_contains": ["噪音", "相邻", "纠纷"],
+    "source_requirement": "law_knowledge"
+  },
+  {
+    "id": "G040",
+    "question": "签了合同不想履行了该怎么办？",
+    "intent": "LEGAL_CONSULTATION",
+    "expected_law_type": "中华人民共和国民法",
+    "difficulty": "medium",
+    "key_points": ["违约责任", "解除合同", "违约金", "不可抗力"],
+    "expected_answer_contains": ["合同", "违约", "解除"],
+    "source_requirement": "law_knowledge"
+  }
+]

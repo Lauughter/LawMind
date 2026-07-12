@@ -1,0 +1,48 @@
+# 劳动合同专项审查清单
+# 在通用清单基础上叠加以下专项维度
+
+specialized_checklist:
+  contract_type: "劳动合同"
+
+  items:
+    - id: L1
+      dimension: "竞业限制"
+      check_point: "竞业限制范围是否合理（地域、行业、期限）、是否有经济补偿"
+      severity: HIGH
+      legal_ref: "《劳动合同法》第23-24条"
+      knowledge_search: "竞业限制 经济补偿 劳动合同法第23条 期限 范围 合理"
+
+    - id: L2
+      dimension: "试用期"
+      check_point: "试用期长度是否合法（合同期3月~1年→试用≤1月；1年~3年→≤2月；3年以上→≤6月）、试用期工资是否≥转正80%且≥最低工资"
+      severity: HIGH
+      legal_ref: "《劳动合同法》第19-20条"
+      knowledge_search: "试用期 期限 工资 劳动合同法第19条 第20条 法定标准"
+
+    - id: L3
+      dimension: "加班费计算"
+      check_point: "加班费计算基数是否合理；是否有变相无偿加班条款"
+      severity: HIGH
+      legal_ref: "《劳动法》第44条"
+      knowledge_search: "加班费 计算基数 劳动法第44条 延长工作时间 工资报酬"
+
+    - id: L4
+      dimension: "社保与公积金"
+      check_point: "是否约定依法缴纳社保和住房公积金"
+      severity: CRITICAL
+      legal_ref: "《社会保险法》第58条"
+      knowledge_search: "社会保险 缴纳义务 劳动合同法 社保 用人单位义务"
+
+    - id: L5
+      dimension: "解雇保护"
+      check_point: "解除条件是否合法；是否有经济补偿/赔偿金约定"
+      severity: CRITICAL
+      legal_ref: "《劳动合同法》第46-48条"
+      knowledge_search: "劳动合同解除 经济补偿金 赔偿金 劳动合同法第46条 第47条 违法解除"
+
+    - id: L6
+      dimension: "工作时间与休息休假"
+      check_point: "工作时间是否符合标准工时制；休假权利是否保障"
+      severity: MEDIUM
+      legal_ref: "《劳动法》第36-45条"
+      knowledge_search: "标准工时 休息休假 年休假 劳动法第36条 第45条"

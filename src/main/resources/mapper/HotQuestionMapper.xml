@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.HotQuestionMapper">
+
+    <resultMap id="BaseResultMap" type="com.lhs.lawmind.entity.HotQuestion">
+        <id column="id" property="id"/>
+        <result column="question_md5" property="questionMd5"/>
+        <result column="original_question" property="originalQuestion"/>
+        <result column="cached_answer" property="cachedAnswer"/>
+        <result column="knowledge_ids" property="knowledgeIds"/>
+        <result column="visit_count" property="visitCount"/>
+        <result column="first_visit_time" property="firstVisitTime"/>
+        <result column="last_visit_time" property="lastVisitTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, question_md5, original_question, cached_answer, knowledge_ids,
+        visit_count, first_visit_time, last_visit_time, create_time, expire_time, status
+    </sql>
+
+    <!-- 根据MD5查询热点问题 -->
+    <select id="selectByQuestionMd5" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM hot_question
+        WHERE question_md5 = #{questionMd5}
+        AND status = 0
+        AND expire_time > NOW()
+    </select>
+
+    <!-- 插入热点问题 -->
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.HotQuestion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO hot_question (
+            question_md5, original_question, cached_answer, knowledge_ids,
+            visit_count, first_visit_time, last_visit_time, create_time, expire_time, status
+        ) VALUES (
+            #{questionMd5}, #{originalQuestion}, #{cachedAnswer}, #{knowledgeIds},
+            #{visitCount}, #{firstVisitTime}, #{lastVisitTime}, #{createTime}, #{expireTime}, #{status}
+        )
+    </insert>
+
+    <!-- 更新热点问题 -->
+    <update id="update" parameterType="com.lhs.lawmind.entity.HotQuestion">
+        UPDATE hot_question
+        <set>
+            <if test="originalQuestion != null">original_question = #{originalQuestion},</if>
+            <if test="cachedAnswer != null">cached_answer = #{cachedAnswer},</if>
+            <if test="knowledgeIds != null">knowledge_ids = #{knowledgeIds},</if>
+            <if test="visitCount != null">visit_count = #{visitCount},</if>
+            <if test="firstVisitTime != null">first_visit_time = #{firstVisitTime},</if>
+            <if test="lastVisitTime != null">last_visit_time = #{lastVisitTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="expireTime != null">expire_time = #{expireTime},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除热点问题 -->
+    <delete id="deleteById">
+        DELETE FROM hot_question WHERE id = #{id}
+    </delete>
+
+    <!-- 查询过期的热点问题 -->
+    <select id="selectExpiredHotQuestions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM hot_question
+        WHERE expire_time &lt;= #{currentTime}
+        AND status = 0
+    </select>
+
+    <!-- 查询访问次数超过阈值的问题 -->
+    <select id="selectHighFrequencyQuestions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM hot_question
+        WHERE visit_count >= #{threshold}
+        AND status = 0
+        ORDER BY visit_count DESC
+    </select>
+
+    <!-- 批量更新状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE hot_question
+        SET status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 统计总热点问题数量 -->
+    <select id="countTotal" resultType="int">
+        SELECT COUNT(*) FROM hot_question WHERE status = 0
+    </select>
+
+    <!-- 查询最近的热点问题 -->
+    <select id="selectRecentHotQuestions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM hot_question
+        WHERE status = 0
+        ORDER BY last_visit_time DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

@@ -1,0 +1,73 @@
+# 通用合同审查清单（10 大风险维度）
+# Agent 审查每个维度时，先以 knowledge_search 关键词检索知识库，再对照法条原文判断
+
+checklist:
+  - id: 1
+    dimension: "主体资格"
+    check_point: "签约方是否适格（自然人/法人/非法人组织），是否有履约能力"
+    severity: HIGH
+    legal_ref: "《民法典》第143-157条 — 民事法律行为效力"
+    knowledge_search: "民事主体资格 合同法 签约主体 民事行为能力"
+
+  - id: 2
+    dimension: "标的明确性"
+    check_point: "合同标的是否清晰具体（商品名称/规格/数量、服务内容/标准）"
+    severity: CRITICAL
+    legal_ref: "《民法典》第470条 — 合同主要条款"
+    knowledge_search: "合同标的 明确性 民法典 合同成立要件 第470条"
+
+  - id: 3
+    dimension: "价款与支付"
+    check_point: "金额是否明确、支付方式/期限/条件是否合理"
+    severity: HIGH
+    legal_ref: "《民法典》第509条 — 全面履行原则"
+    knowledge_search: "合同价款 支付期限 民法典 买卖合同 价款约定"
+
+  - id: 4
+    dimension: "履行期限与方式"
+    check_point: "履行时间、地点、方式是否明确；是否存在单方任意变更权"
+    severity: HIGH
+    legal_ref: "《民法典》第510条 — 约定不明确的补充规则"
+    knowledge_search: "合同履行期限 履行方式 民法典第510条 约定不明确"
+
+  - id: 5
+    dimension: "违约责任"
+    check_point: "违约情形是否对等；违约金是否过高（>30% 实际损失）；是否有免责条款过宽"
+    severity: CRITICAL
+    legal_ref: "《民法典》第585条 — 违约金调整"
+    knowledge_search: "违约金 过高 调整 民法典第585条 违约责任 实际损失 百分之三十"
+
+  - id: 6
+    dimension: "争议解决"
+    check_point: "管辖法院/仲裁机构是否对己方有利；是否有不合理的管辖约定"
+    severity: MEDIUM
+    legal_ref: "《民事诉讼法》第24条 — 合同纠纷管辖"
+    knowledge_search: "合同管辖 约定管辖 民事诉讼法第24条 仲裁协议 效力"
+
+  - id: 7
+    dimension: "权利义务对等"
+    check_point: "是否存在一方权利过多、义务过少；免责条款是否仅免除一方责任"
+    severity: CRITICAL
+    legal_ref: "《民法典》第497条 — 无效格式条款"
+    knowledge_search: "格式条款 无效 民法典第497条 权利义务对等 免责条款 公平原则"
+
+  - id: 8
+    dimension: "知识产权与保密"
+    check_point: "知识产权归属是否明确；保密义务范围和期限是否合理"
+    severity: MEDIUM
+    legal_ref: "《民法典》第501条 — 商业秘密保护"
+    knowledge_search: "知识产权归属 保密协议 反不正当竞争法 商业秘密 保密义务"
+
+  - id: 9
+    dimension: "合同终止与解除"
+    check_point: "解除条件是否公平；是否有不合理的单方解除权"
+    severity: HIGH
+    legal_ref: "《民法典》第563条 — 法定解除权"
+    knowledge_search: "合同解除 法定解除权 民法典第563条 终止条件 单方解除"
+
+  - id: 10
+    dimension: "格式条款风险"
+    check_point: "是否存在"最终解释权归XX所有"等无效格式条款"
+    severity: CRITICAL
+    legal_ref: "《民法典》第496-498条 — 格式条款规则"
+    knowledge_search: "格式条款 无效情形 民法典第496条 第497条 最终解释权 提请注意"

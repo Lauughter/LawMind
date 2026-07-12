@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lhs.lawmind.mapper.UserMapper">
+    <select id="selectAll" resultType="com.lhs.lawmind.entity.User">
+        select * from user where is_deleted = 0
+    </select>
+    <select id="selectById" resultType="com.lhs.lawmind.entity.User">
+        select * from user where id = #{id} and is_deleted = 0
+    </select>
+    <select id="selectByUsername" resultType="com.lhs.lawmind.entity.User">
+        select * from user where username = #{username} and is_deleted = 0
+    </select>
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.User">
+        insert into user (username, password, nickname, phone, create_time)
+        values (#{username}, #{password}, #{nickname}, #{phone}, now())
+    </insert>
+    <update id="update" parameterType="com.lhs.lawmind.entity.User">
+        update user
+        set username = #{username}, password = #{password}, nickname = #{nickname}, phone = #{phone}
+        where id = #{id}
+    </update>
+    <update id="delete" parameterType="java.lang.Long">
+        update user set is_deleted = 1 where id = #{id}
+    </update>
+    <select id="selectPage" resultType="com.lhs.lawmind.entity.User">
+        SELECT * FROM user WHERE is_deleted = 0 ORDER BY id DESC LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM user WHERE is_deleted = 0
+    </select>
+</mapper>
