@@ -35,3 +35,26 @@ build/
 ### Secrets ###
 .env
 application-dev.yml
+
+### Test scripts & results ###
+test-payload.json
+test-*.py
+test-*.sh
+test-retrieval.sh
+test_results.json
+test-results/
+check-*.bat
+run_tests.py
+
+### Python ###
+__pycache__/
+scripts/__pycache__/
+
+### CodeGraph internal ###
+.codegraph/
+
+### Internal config ###
+.configignore
+
+### Project tech doc (local only, for interview prep) ###
+docs/LawMind-项目技术详解.md
