@@ -122,7 +122,9 @@ lawmind:
           - 政治敏感
 
         # LLM 兜底判断 prompt（仅对模糊边界问题调用，~50 tokens）
-        llm-prompt: "请判断以下问题是否涉及中国法律领域（包括法律咨询、法条查询、案例分析、法律知识问答、文书起草、法律程序等）。仅回答"是"或"否"。\n问题："
+        llm-prompt: |-
+          请判断以下问题是否涉及中国法律领域（包括法律咨询、法条查询、案例分析、法律知识问答、文书起草、法律程序等）。仅回答「是」或「否」。
+          问题：
 
       # ---------- Layer 2: 意图细分（IntentClassifierEnhanced） ----------
       intent:
@@ -234,7 +236,9 @@ lawmind:
           - 帮我审核
 
         # LLM 意图分类 prompt（仅对关键词未命中的问题调用，~60 tokens）
-        llm-prompt: "请将以下法律问题分类为以下类型之一（仅输出类型名称）：ARTICLE_LOOKUP（法条查询）、LEGAL_CONSULTATION（法律咨询）、CALCULATION（金额计算）、CASE_SEARCH（案例检索）、DOCUMENT_DRAFTING（文书起草）、LEGAL_KNOWLEDGE（法律知识问答）、CONTRACT_REVIEW（合同审查）。\n问题："
+        llm-prompt: |-
+          请将以下法律问题分类为以下类型之一（仅输出类型名称）：ARTICLE_LOOKUP（法条查询）、LEGAL_CONSULTATION（法律咨询）、CALCULATION（金额计算）、CASE_SEARCH（案例检索）、DOCUMENT_DRAFTING（文书起草）、LEGAL_KNOWLEDGE（法律知识问答）、CONTRACT_REVIEW（合同审查）。
+          问题：
 
       # ---------- Layer 3: 复杂度评估 + 路由决策 ----------
       complexity:
