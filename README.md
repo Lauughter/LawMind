@@ -90,12 +90,13 @@ cd LawMind
 ### 2. 初始化数据库
 
 ```bash
-# 创建数据库并执行初始化脚本
-mysql -u root -p < src/main/resources/sql/V1.0__init_schema.sql
-mysql -u root -p < src/main/resources/sql/V1.1__ai_memory.sql
+mysql -u root -p < src/main/resources/sql/init_schema.sql
 ```
 
-> 脚本按版本顺序执行：V1.0 创建核心表，V1.1 创建记忆系统表。
+> 脚本包含全部 14 张表的建表语句，并自动创建一个管理员账号：
+> - 用户名：`admin`
+> - 密码：`123456`
+> - 登录后可在前端页面修改密码。
 
 ### 3. 配置文件
 
