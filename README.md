@@ -87,9 +87,15 @@ git clone https://github.com/Lauughter/LawMind.git
 cd LawMind
 ```
 
-### 2. 配置数据库
+### 2. 初始化数据库
 
-在 MySQL 中创建数据库并执行 `sql/` 目录下的初始化脚本。
+```bash
+# 创建数据库并执行初始化脚本
+mysql -u root -p < src/main/resources/sql/V1.0__init_schema.sql
+mysql -u root -p < src/main/resources/sql/V1.1__ai_memory.sql
+```
+
+> 脚本按版本顺序执行：V1.0 创建核心表，V1.1 创建记忆系统表。
 
 ### 3. 配置文件
 
