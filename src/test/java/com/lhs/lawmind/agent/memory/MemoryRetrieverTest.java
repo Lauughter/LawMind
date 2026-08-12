@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import com.lhs.lawmind.entity.AiMemory;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MemoryRetriever 两级检索测试")

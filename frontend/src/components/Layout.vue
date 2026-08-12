@@ -56,14 +56,6 @@
           <span v-show="!isSidebarCollapsed">Agent监控</span>
         </router-link>
         <router-link
-          to="/home/contract-review"
-          class="nav-item"
-          :title="isSidebarCollapsed ? '合同审查' : ''"
-        >
-          <el-icon><Checked /></el-icon>
-          <span v-show="!isSidebarCollapsed">合同审查</span>
-        </router-link>
-        <router-link
           to="/home/profile"
           class="nav-item"
           :title="isSidebarCollapsed ? '个人中心' : ''"
@@ -128,7 +120,6 @@ import {
   Expand,
   DataAnalysis,
   TrendCharts,
-  Checked,
 } from "@element-plus/icons-vue";
 import { useUserStore } from "../stores/user";
 
@@ -156,7 +147,6 @@ const currentPageTitle = computed(() => {
   if (path.includes("quality")) return "质量看板";
   if (path.includes("profile")) return "个人中心";
   if (path.includes("agent-metrics")) return "Agent监控";
-  if (path.includes("contract-review")) return "合同审查";
   return "LawMind";
 });
 
@@ -175,8 +165,6 @@ const currentComponent = computed(() => {
     return defineAsyncComponent(() => import("../views/Profile.vue"));
   if (path.includes("agent-metrics"))
     return defineAsyncComponent(() => import("../views/AgentMetrics.vue"));
-  if (path.includes("contract-review"))
-    return defineAsyncComponent(() => import("../views/ContractReview.vue"));
   return null;
 });
 

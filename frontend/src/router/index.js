@@ -46,11 +46,6 @@ const routes = [
     name: "AgentMetrics",
     component: () => import("../components/Layout.vue"),
   },
-  {
-    path: "/home/contract-review",
-    name: "ContractReview",
-    component: () => import("../components/Layout.vue"),
-  },
 ];
 
 const router = createRouter({

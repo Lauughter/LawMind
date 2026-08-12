@@ -5,28 +5,24 @@ import com.lhs.lawmind.config.RagConfig;
 import com.lhs.lawmind.dto.AIChatResponse;
 import com.lhs.lawmind.entity.AiChat;
 import com.lhs.lawmind.entity.LawKnowledge;
-import com.lhs.lawmind.entity.SimilarQuestion;
 import com.lhs.lawmind.service.AiChatService;
 import com.lhs.lawmind.service.AutoLearnService;
 import com.lhs.lawmind.service.LawKnowledgeService;
 import com.lhs.lawmind.service.RagService;
 import com.lhs.lawmind.service.RagMetricsService;
-import com.lhs.lawmind.service.SimilarQuestionService;
 import com.lhs.lawmind.service.HybridSearchService;
 import com.lhs.lawmind.service.RerankService;
 import com.lhs.lawmind.service.SysConfigService;
 import com.lhs.lawmind.utils.EmbeddingUtil;
-import com.lhs.lawmind.utils.HotCacheUtil;
-import com.lhs.lawmind.utils.IntentClassifier;
-import com.lhs.lawmind.utils.LegalEntityExtractor;
-import com.lhs.lawmind.utils.LegalQueryExpander;
-import com.lhs.lawmind.utils.SearchResultDiversifier;
-import com.lhs.lawmind.utils.SimilarQuestionRedisUtil;
-import com.lhs.lawmind.utils.LawKnowledgeRedisUtil;
-import com.lhs.lawmind.utils.VisitStatsUtil;
+import com.lhs.lawmind.agent.gate.IntentClassifierEnhanced;
+import com.lhs.lawmind.agent.gate.IntentType;
+import com.lhs.lawmind.utils.query.LegalEntityExtractor;
+import com.lhs.lawmind.utils.query.LegalQueryExpander;
+import com.lhs.lawmind.utils.query.SearchResultDiversifier;
+import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
 import com.lhs.lawmind.utils.JsonUtil;
-import com.lhs.lawmind.utils.TextPreprocessUtil;
-import com.lhs.lawmind.utils.RedisVectorUtil;
+import com.lhs.lawmind.utils.query.TextPreprocessUtil;
+import com.lhs.lawmind.utils.redis.RedisVectorUtil;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -55,13 +51,12 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * RAG知识库检索服务实现类
- * 实现完整的RAG流程：热点缓存 -> 相似问题 -> 法律知识库 -> 大模型兜底
+ * 实现完整的RAG流程：预处理 -> 查询扩展 -> 混合检索 -> LLM 生成
  * 包含的方法有：
  * 1. 判断问题是否与法律相关
- * 2. 从缓存中获取热点问题
- * 3. 从Redis中获取相似问题
- * 4. 从Redis中获取法律知识
- * 5. 调用大模型生成回答
+ * 2. 查询扩展（规则 + LLM 改写）
+ * 3. 混合检索（向量 + 全文 + Rerank + MMR + 阈值过滤）
+ * 4. 调用大模型生成回答
  */
 @Slf4j
 @Service
@@ -70,21 +65,17 @@ public class RagServiceImpl implements RagService {
     private final ChatLanguageModel chatLanguageModel;
     private final StreamingChatLanguageModel streamingChatLanguageModel;
     private final EmbeddingUtil embeddingUtil;
-    private final HotCacheUtil hotCacheUtil;
-    private final SimilarQuestionRedisUtil similarQuestionRedisUtil;
     private final LawKnowledgeRedisUtil lawKnowledgeRedisUtil;
-    private final VisitStatsUtil visitStatsUtil;
     private final RagConfig ragConfig;
     private final LawKnowledgeService lawKnowledgeService;
     private final AiChatService aiChatService;
     private final com.lhs.lawmind.mapper.AiChatMapper aiChatMapper;
-    private final SimilarQuestionService similarQuestionService;
     private final AutoLearnService autoLearnService;
     private final HybridSearchService hybridSearchService;
     private final RerankService rerankService;
     private final LegalQueryExpander legalQueryExpander;
     private final SearchResultDiversifier searchResultDiversifier;
-    private final IntentClassifier intentClassifier;
+    private final IntentClassifierEnhanced intentClassifierEnhanced;
     private final LegalEntityExtractor legalEntityExtractor;
     private final SysConfigService sysConfigService;
     private final RagPersistenceService ragPersistenceService;
@@ -113,21 +104,17 @@ public class RagServiceImpl implements RagService {
             Optional<ChatLanguageModel> chatLanguageModel,
             Optional<StreamingChatLanguageModel> streamingChatLanguageModel,
             Optional<EmbeddingUtil> embeddingUtil,
-            HotCacheUtil hotCacheUtil,
-            SimilarQuestionRedisUtil similarQuestionRedisUtil,
             LawKnowledgeRedisUtil lawKnowledgeRedisUtil,
-            VisitStatsUtil visitStatsUtil,
             RagConfig ragConfig,
             LawKnowledgeService lawKnowledgeService,
             @Lazy AiChatService aiChatService,
             com.lhs.lawmind.mapper.AiChatMapper aiChatMapper,
-            SimilarQuestionService similarQuestionService,
             AutoLearnService autoLearnService,
             HybridSearchService hybridSearchService,
             RerankService rerankService,
             LegalQueryExpander legalQueryExpander,
             SearchResultDiversifier searchResultDiversifier,
-            IntentClassifier intentClassifier,
+            IntentClassifierEnhanced intentClassifierEnhanced,
             LegalEntityExtractor legalEntityExtractor,
             SysConfigService sysConfigService,
             RagPersistenceService ragPersistenceService,
@@ -135,38 +122,26 @@ public class RagServiceImpl implements RagService {
         this.chatLanguageModel = chatLanguageModel.orElse(null);
         this.streamingChatLanguageModel = streamingChatLanguageModel.orElse(null);
         this.embeddingUtil = embeddingUtil.orElse(null);
-        this.hotCacheUtil = hotCacheUtil;
-        this.similarQuestionRedisUtil = similarQuestionRedisUtil;
         this.lawKnowledgeRedisUtil = lawKnowledgeRedisUtil;
-        this.visitStatsUtil = visitStatsUtil;
         this.ragConfig = ragConfig;
         this.lawKnowledgeService = lawKnowledgeService;
         this.aiChatService = aiChatService;
         this.aiChatMapper = aiChatMapper;
-        this.similarQuestionService = similarQuestionService;
         this.autoLearnService = autoLearnService;
         this.hybridSearchService = hybridSearchService;
         this.rerankService = rerankService;
         this.legalQueryExpander = legalQueryExpander;
         this.searchResultDiversifier = searchResultDiversifier;
-        this.intentClassifier = intentClassifier;
+        this.intentClassifierEnhanced = intentClassifierEnhanced;
         this.legalEntityExtractor = legalEntityExtractor;
         this.sysConfigService = sysConfigService;
         this.ragPersistenceService = ragPersistenceService;
         this.ragMetricsService = ragMetricsService;
     }
 
-    // 问题类型关键词映射
-    private static final String[][] QUESTION_TYPES = {
-        {"wage", "试用期", "工资", "薪资", "薪酬", "加班费", "工资条", "工资发放"},
-        {"work_injury", "工伤", "受伤", "事故", "伤残", "工伤认定", "工伤保险"},
-        {"social_security", "社保", "社会保险", "五险一金", "社保缴纳", "医保"},
-        {"other", "其他", "法律", "咨询"}
-    };
-
     /**
      * 判断问题是否与法律相关
-     * 
+     *
      * @param question 用户问题
      * @return 是否与法律相关
      */
@@ -272,7 +247,7 @@ public class RagServiceImpl implements RagService {
     @NoLog
     public AIChatResponse processQuestion(Long userId, String question, Long conversationId) {
         long t0 = System.currentTimeMillis();
-        long tPre, tCache = 0, tEmbed = 0, tHyde = 0, tSim = 0, tKnow = 0, tGen = 0;
+        long tPre, tEmbed = 0, tHyde = 0, tKnow = 0, tGen = 0;
         question = sanitizeUserInput(question);
         log.info("[RAG] q=\"{}\" userId={}", question.length() > 60 ? question.substring(0, 60) + "..." : question, userId);
         if (com.lhs.lawmind.security.PiiUtil.hasPii(question)) {
@@ -309,7 +284,7 @@ public class RagServiceImpl implements RagService {
         String source = "llm_direct";
         String knowledgeMatch = "[]";
         List<LawKnowledge> relatedKnowledge = new ArrayList<>();
-        IntentClassifier.Intent intent = null;
+        IntentType intent = null;
         String entityLawType = null;
 
         try {
@@ -318,7 +293,7 @@ public class RagServiceImpl implements RagService {
             String processedQuestion = preprocessResult.getProcessedText();
             String md5 = preprocessResult.getMd5();
             String ruleExpandedQuery = legalQueryExpander.expandQuery(processedQuestion);
-            intent = intentClassifier.classify(processedQuestion);
+            intent = intentClassifierEnhanced.classifyType(processedQuestion);
             LegalEntityExtractor.LegalEntities entities = legalEntityExtractor.extract(processedQuestion);
             entityLawType = entities.getLawType();
             // Entity-aware expansion: inject extracted law type + article reference into query
@@ -330,29 +305,11 @@ public class RagServiceImpl implements RagService {
                 }
                 ruleExpandedQuery = eb.toString();
             }
-            int adjustedTopK = intentClassifier.adjustTopK(intent, ragConfig.getSearchTopK());
+            int adjustedTopK = intentClassifierEnhanced.adjustTopK(intent, ragConfig.getSearchTopK());
             tPre = System.currentTimeMillis();
             log.info("[RAG] preprocess md5={} intent={} lawType={} topK={} expandLen={} preMs={}",
                     md5, intent, entityLawType, adjustedTopK,
                     ruleExpandedQuery.length() - processedQuestion.length(), tPre - t0);
-
-            // Step 2: 热点缓存（在 LLM 改写前检查，避免浪费 API 调用）
-            String hotCacheAnswer = queryHotCache(md5);
-            tCache = System.currentTimeMillis();
-            if (hotCacheAnswer != null) {
-                answer = hotCacheAnswer;
-                source = "hot_cache";
-                response.setAnswer(answer);
-                response.setRelatedKnowledge(new ArrayList<>());
-                response.setConversationId(conversationId);
-                ragPersistenceService.asyncLogVisit(userId, question, answer, knowledgeMatch, source, conversationId);
-                ragPersistenceService.asyncUpdateSimilarQuestion(question, answer, "", new float[0]);
-                long hotTotal = System.currentTimeMillis() - t0;
-                ragMetricsService.recordRequest("hot_cache", tPre - t0, 0, 0, 0, hotTotal, 0, 0.0, false, null);
-                log.info("[RAG-SUMMARY] source=hot_cache preMs={} cacheMs={} totalMs={}",
-                        tPre - t0, tCache - tPre, hotTotal);
-                return response;
-            }
 
             // Step 3: 查询扩展 + 向量化（LLM 改写基于规则扩展结果，合并而非替换）
             String llmRewrittenQuery = rewriteQueryWithLLM(ruleExpandedQuery);
@@ -393,26 +350,6 @@ public class RagServiceImpl implements RagService {
                 tHyde = tEmbed;
             }
 
-            // Step 4: 相似问题搜索（始终使用查询向量，问题-问题匹配）
-            SimilarQuestion similarQuestion = searchSimilarQuestion(question, questionVector);
-            tSim = System.currentTimeMillis();
-            if (similarQuestion != null) {
-                answer = similarQuestion.getAnswer();
-                source = "similar_question";
-                String knowledgeIds = similarQuestion.getKnowledgeIds();
-                response.setAnswer(answer);
-                response.setRelatedKnowledge(new ArrayList<>());
-                response.setConversationId(conversationId);
-                ragPersistenceService.asyncInsertQuestionAndKnowledge(userId, question, answer, knowledgeIds, conversationId);
-                checkAndUpgradeHotCache(md5, answer);
-                ragPersistenceService.asyncUpdateSimilarQuestion(question, answer, knowledgeIds, questionVector);
-                long simTotal = System.currentTimeMillis() - t0;
-                ragMetricsService.recordRequest("similar_question", tPre - t0, tEmbed - tCache, 0, 0, simTotal, 0, 0.0, false, null);
-                log.info("[RAG-SUMMARY] source=similar_question preMs={} embedMs={} simMs={} totalMs={}",
-                        tPre - t0, tEmbed - tCache, tSim - tEmbed, simTotal);
-                return response;
-            }
-
             // Step 5: 混合搜索 + MMR + 阈值过滤（使用 HyDE 向量或查询向量）
             relatedKnowledge = searchLawKnowledgeFiltered(knowledgeVector, expandedQuery, entityLawType, adjustedTopK);
             tKnow = System.currentTimeMillis();
@@ -447,21 +384,18 @@ public class RagServiceImpl implements RagService {
 
             // Step 7: 异步后续处理
             ragPersistenceService.asyncLogVisit(userId, question, answer, knowledgeMatch, source, conversationId, tokenInput, tokenOutput);
-            checkAndUpgradeHotCache(md5, answer);
-            String knowledgeIds = extractKnowledgeIds(relatedKnowledge);
-            ragPersistenceService.asyncUpdateSimilarQuestion(question, answer, knowledgeIds, questionVector);
 
             // 结构化汇总日志
             double topScore = relatedKnowledge.isEmpty() ? 0.0 :
                     relatedKnowledge.stream().mapToDouble(k -> k.getScore() != null ? k.getScore() : 0.0).max().orElse(0.0);
             long totalMs = System.currentTimeMillis() - t0;
             ragMetricsService.recordRequest(source,
-                    tPre - t0, tEmbed - tCache, tKnow - tSim, tGen - tKnow, totalMs,
+                    tPre - t0, tEmbed - tPre, tKnow - tEmbed, tGen - tKnow, totalMs,
                     relatedKnowledge.size(), topScore, ragConfig.isHydeEnabled(), null);
-            log.info("[RAG-SUMMARY] source={} intent={} lawType={} retrieved={} topScore={} hyde={} preMs={} embedMs={} hydeMs={} simMs={} knowMs={} genMs={} totalMs={}",
+            log.info("[RAG-SUMMARY] source={} intent={} lawType={} retrieved={} topScore={} hyde={} preMs={} embedMs={} hydeMs={} knowMs={} genMs={} totalMs={}",
                     source, intent, entityLawType, relatedKnowledge.size(), String.format("%.4f", topScore),
                     ragConfig.isHydeEnabled() && knowledgeVector != questionVector ? "Y" : "N",
-                    tPre - t0, tEmbed - tCache, tHyde - tEmbed, tSim - tHyde, tKnow - tSim, tGen - tKnow, System.currentTimeMillis() - t0);
+                    tPre - t0, tEmbed - tPre, tHyde - tEmbed, tKnow - tHyde, tGen - tKnow, System.currentTimeMillis() - t0);
 
         } catch (Exception e) {
             log.error("[RAG] process error: {}", e.getMessage(), e);
@@ -473,90 +407,6 @@ public class RagServiceImpl implements RagService {
         }
 
         return response;
-    }
-
-    @Override
-    public String queryHotCache(String md5) {
-        return hotCacheUtil.getHotQuestionCache(md5);
-    }
-
-    /**
-     * 搜索相似问题
-     * @param originalQuestion 原始问题
-     * @param questionVector 问题向量
-     * @return
-     */
-    @Override
-    public SimilarQuestion searchSimilarQuestion(String originalQuestion, float[] questionVector) {
-        if (questionVector == null || questionVector.length == 0) {
-            log.warn("问题向量为空，无法搜索相似问题");
-            return null;
-        }
-
-        try {
-            List<RedisVectorUtil.SearchResult> results = similarQuestionRedisUtil.searchSimilarQuestions(questionVector, ragConfig.getSearchTopK());
-
-            if (results.isEmpty()) {
-                log.info("未找到相似问题");
-                return null;
-            }
-
-            // 找到相似度最高且类型匹配的结果
-            RedisVectorUtil.SearchResult bestResult = null;
-            double highestSimilarity = -1.0;
-            List<RedisVectorUtil.SearchResult> candidates = new ArrayList<>();
-
-            String queryType = classifyQuestionType(originalQuestion);
-            
-            for (RedisVectorUtil.SearchResult result : results) {
-                double similarity = result.getScore();
-                String key = result.getKey();
-                String idStr = key.replace(ragConfig.getSimilarQuestionKeyPrefix(), "");
-                try {
-                    Long id = Long.parseLong(idStr);
-                    SimilarQuestion similarQuestion = similarQuestionRedisUtil.getSimilarQuestion(id);
-                    String candidateType = similarQuestion != null ? classifyQuestionType(similarQuestion.getQuestion()) : null;
-
-                    if (similarity >= ragConfig.getSimilarQuestionThreshold()) {
-                        if (similarQuestion != null && isSameType(originalQuestion, similarQuestion.getQuestion())) {
-                            if (similarity > highestSimilarity) {
-                                highestSimilarity = similarity;
-                                bestResult = result;
-                                candidates.clear();
-                                candidates.add(result);
-                            } else if (similarity == highestSimilarity) {
-                                candidates.add(result);
-                            }
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    log.warn("Invalid similar-question id: {}", idStr);
-                }
-            }
-
-            if (bestResult == null) {
-                return null;
-            }
-
-            if (candidates.size() > 1) {
-                int randomIndex = (int) (Math.random() * candidates.size());
-                bestResult = candidates.get(randomIndex);
-            }
-
-            String key = bestResult.getKey();
-            String idStr = key.replace(ragConfig.getSimilarQuestionKeyPrefix(), "");
-            Long id = Long.parseLong(idStr);
-            SimilarQuestion question = similarQuestionRedisUtil.getSimilarQuestion(id);
-            if (question != null) {
-                log.info("[RAG] similarQuestion hit: id={} score={}", id, String.format("%.4f", bestResult.getScore()));
-                return question;
-            }
-            return null;
-
-        } catch (Exception e) {
-            log.error("搜索相似问题失败: {}", e.getMessage(), e);
-            return null;
-        }
     }
 
     @Override
@@ -751,41 +601,8 @@ public class RagServiceImpl implements RagService {
     }
 
     @Override
-    public void asyncUpdateSimilarQuestion(String question, String answer, String knowledgeIds, float[] questionVector) {
-        ragPersistenceService.asyncUpdateSimilarQuestion(question, answer, knowledgeIds, questionVector);
-    }
-
-    @Override
     public void asyncUpdateKnowledgeToChatRecord(Long chatId, String knowledgeIds) {
         ragPersistenceService.asyncUpdateKnowledgeToChatRecord(chatId, knowledgeIds);
-    }
-
-    @Override
-    public void asyncInsertQuestionAndKnowledge(Long userId, String question, String answer, String knowledgeIds, Long conversationId) {
-        ragPersistenceService.asyncInsertQuestionAndKnowledge(userId, question, answer, knowledgeIds, conversationId);
-    }
-
-    /**
-     * 检查并升级热点缓存
-     * 
-     * @param md5 问题的MD5值
-     * @param answer AI回答
-     * 
-     */
-    @Override
-    public void checkAndUpgradeHotCache(String md5, String answer) {
-        try {
-            VisitStatsUtil.VisitStats stats = visitStatsUtil.getVisitStats(md5);
-            log.debug("访问统计: 5分钟={}, 1小时={}, 1天={}",
-                    stats.getCount5Minutes(), stats.getCount1Hour(), stats.getCount1Day());
-
-            if (visitStatsUtil.isHotQuestion(stats)) {
-                hotCacheUtil.setHotQuestionCache(md5, answer);
-                log.info("问题达到热点阈值，已存入热点缓存: {}", md5);
-            }
-        } catch (Exception e) {
-            log.error("检查热点缓存失败: {}", e.getMessage(), e);
-        }
     }
 
     /**
@@ -836,56 +653,6 @@ public class RagServiceImpl implements RagService {
      */
     private String buildKnowledgeMatchJson(List<LawKnowledge> relatedKnowledge) {
         return JsonUtil.buildKnowledgeMatchJson(relatedKnowledge);
-    }
-
-    /**
-     * 提取知识点ID列表
-     */
-    private String extractKnowledgeIds(List<LawKnowledge> relatedKnowledge) {
-        if (relatedKnowledge == null || relatedKnowledge.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder ids = new StringBuilder();
-        for (int i = 0; i < relatedKnowledge.size(); i++) {
-            ids.append(relatedKnowledge.get(i).getId());
-            if (i < relatedKnowledge.size() - 1) {
-                ids.append(",");
-            }
-        }
-        return ids.toString();
-    }
-
-    /**
-     * 分类问题类型
-     * 根据关键词判断问题属于哪个类别
-     *
-     * @param question 问题文本
-     * @return 问题类型
-     */
-    private String classifyQuestionType(String question) {
-        for (String[] type : QUESTION_TYPES) {
-            String typeName = type[0];
-            for (int i = 1; i < type.length; i++) {
-                if (question.contains(type[i])) {
-                    return typeName;
-                }
-            }
-        }
-        return "other";
-    }
-
-    /**
-     * 检查两个问题是否属于同一类型
-     *
-     * @param question1 第一个问题
-     * @param question2 第二个问题
-     * @return 是否属于同一类型
-     */
-    private boolean isSameType(String question1, String question2) {
-        String type1 = classifyQuestionType(question1);
-        String type2 = classifyQuestionType(question2);
-        return type1.equals(type2);
     }
 
     // ==================== SSE 流式处理 ====================
@@ -972,9 +739,8 @@ public class RagServiceImpl implements RagService {
             // Step 1: 预处理 + 意图 + 实体（轻量级，不含 LLM 调用）
             TextPreprocessUtil.PreprocessResult preprocessResult = TextPreprocessUtil.preprocessAndGenerateMD5(question);
             String processedQuestion = preprocessResult.getProcessedText();
-            String md5 = preprocessResult.getMd5();
             String ruleExpandedQuery = legalQueryExpander.expandQuery(processedQuestion);
-            IntentClassifier.Intent intent = intentClassifier.classify(processedQuestion);
+            IntentType intent = intentClassifierEnhanced.classifyType(processedQuestion);
             LegalEntityExtractor.LegalEntities entities = legalEntityExtractor.extract(processedQuestion);
             String entityLawType = entities.getLawType();
             // Entity-aware expansion: inject extracted law type + article reference into query
@@ -986,22 +752,9 @@ public class RagServiceImpl implements RagService {
                 }
                 ruleExpandedQuery = eb.toString();
             }
-            int adjustedTopK = intentClassifier.adjustTopK(intent, ragConfig.getSearchTopK());
+            int adjustedTopK = intentClassifierEnhanced.adjustTopK(intent, ragConfig.getSearchTopK());
             long tPre = System.currentTimeMillis();
             log.info("[RAG-TIME] 1-preprocess: {}ms | intent={} entity={}", tPre - t0, intent.name(), entityLawType);
-
-            // Step 2: 热点缓存（在 LLM 改写前检查，避免浪费 API 调用）
-            String hotCacheAnswer = queryHotCache(md5);
-            if (hotCacheAnswer != null) {
-                String answer = appendComplianceDisclaimer(hotCacheAnswer, "hot_cache");
-                safeSend(emitter, completed, SseEmitter.event().name("token").data("{\"content\":\"" + escapeJson(answer) + "\"}"));
-                Long chatId = ragPersistenceService.saveChatRecord(userId, question, answer, "[]", "hot_cache", conversationId, 0, 0);
-                safeSend(emitter, completed, SseEmitter.event().name("done").data("{\"conversationId\":" + conversationId + ",\"chatId\":" + chatId + "}"));
-                safeComplete(emitter, completed);
-                ragPersistenceService.asyncUpdateSimilarQuestion(question, hotCacheAnswer, "", new float[0]);
-                ragMetricsService.recordRequest("hot_cache", tPre - t0, 0, 0, 0, System.currentTimeMillis() - t0, 0, 0.0, false, null);
-                return;
-            }
 
             // Step 3: 查询扩展 + 向量化（LLM 改写基于规则扩展结果，合并而非替换）
             String llmRewrittenQuery = rewriteQueryWithLLM(ruleExpandedQuery);
@@ -1043,35 +796,10 @@ public class RagServiceImpl implements RagService {
                 log.info("[RAG-TIME] 3.5-hyde: {}ms", tHyde - tEmbed);
             }
 
-            // Step 4: 相似问题（始终使用查询向量）
-            SimilarQuestion similarQuestion = searchSimilarQuestion(question, questionVector);
-            if (similarQuestion != null) {
-                String answerRaw = similarQuestion.getAnswer();
-                String answer = appendComplianceDisclaimer(answerRaw, "similar_question");
-                String knowledgeIds = similarQuestion.getKnowledgeIds();
-                safeSend(emitter, completed, SseEmitter.event().name("token").data("{\"content\":\"" + escapeJson(answer) + "\"}"));
-                Long chatId = ragPersistenceService.saveChatRecord(userId, question, answer, "[]", "similar_question", conversationId, 0, 0);
-                safeSend(emitter, completed, SseEmitter.event().name("done").data("{\"conversationId\":" + conversationId + ",\"chatId\":" + chatId + "}"));
-                safeComplete(emitter, completed);
-                ragPersistenceService.asyncInsertQuestionAndKnowledge(userId, question, answer, knowledgeIds, conversationId);
-                checkAndUpgradeHotCache(md5, answer);
-                ragPersistenceService.asyncUpdateSimilarQuestion(question, answer, knowledgeIds, questionVector);
-                long simTotal = System.currentTimeMillis() - t0;
-                ragMetricsService.recordRequest("similar_question", tPre - t0, tEmbed - tPre, 0, 0, simTotal, 0, 0.0, false, null);
-                log.info("[RAG-SSE-SUMMARY] source=similar_question embedMs={} simMs={} totalMs={}",
-                        tEmbed - t0, System.currentTimeMillis() - tEmbed, simTotal);
-                return;
-            }
-
-            long tSimilar = System.currentTimeMillis();
-            if (similarQuestion == null) {
-                log.info("[RAG-TIME] 4-similarSearch: {}ms (miss)", tSimilar - tHyde);
-            }
-
             // Step 5: 混合搜索 + MMR（使用 HyDE 向量或查询向量）
             List<LawKnowledge> relatedKnowledge = searchLawKnowledgeFiltered(knowledgeVector, expandedQuery, entityLawType, adjustedTopK);
             long tKnow = System.currentTimeMillis();
-            log.info("[RAG-TIME] 5-knowledgeSearch: {}ms | results={}", tKnow - tSimilar, relatedKnowledge.size());
+            log.info("[RAG-TIME] 5-knowledgeSearch: {}ms | results={}", tKnow - tHyde, relatedKnowledge.size());
             String knowledgeMatch = buildKnowledgeMatchJson(relatedKnowledge);
 
             // 发送 knowledge 事件
@@ -1112,9 +840,6 @@ public class RagServiceImpl implements RagService {
                 Long chatId = ragPersistenceService.saveChatRecord(userId, question, fallbackAnswer, knowledgeMatch, source, conversationId, fbTokenInput, fbTokenOutput);
                 safeSend(emitter, completed, SseEmitter.event().name("done").data("{\"conversationId\":" + conversationId + ",\"chatId\":" + chatId + "}"));
                 safeComplete(emitter, completed);
-                checkAndUpgradeHotCache(md5, fallbackAnswer);
-                String knowledgeIds = extractKnowledgeIds(relatedKnowledge);
-                ragPersistenceService.asyncUpdateSimilarQuestion(question, fallbackAnswer, knowledgeIds, questionVector);
                 long fbTotal = System.currentTimeMillis() - t0;
                 double fbTopScore = relatedKnowledge.isEmpty() ? 0.0 :
                         relatedKnowledge.stream().mapToDouble(k -> k.getScore() != null ? k.getScore() : 0.0).max().orElse(0.0);
@@ -1129,17 +854,14 @@ public class RagServiceImpl implements RagService {
             final String finalQuestion = question;
             final String finalSource = source;
             final String finalKnowledgeMatch = knowledgeMatch;
-            final String finalMd5 = md5;
-            final float[] finalQuestionVector = questionVector;
             final List<LawKnowledge> finalRelatedKnowledge = relatedKnowledge;
             final long finalTPre = tPre;
             final long finalTRewrite = tRewrite;
             final long finalTEmbed = tEmbed;
             final long finalTHyde = tHyde;
-            final long finalTSimilar = tSimilar;
             final long finalTKnow = tKnow;
             final long finalTHistory = tHistory;
-            final IntentClassifier.Intent finalIntent = intent;
+            final IntentType finalIntent = intent;
             final String finalEntityLawType = entityLawType;
 
             streamingChatLanguageModel.generate(List.of(buildSystemPrompt(), UserMessage.from(userPrompt)), new StreamingResponseHandler<AiMessage>() {
@@ -1170,10 +892,6 @@ public class RagServiceImpl implements RagService {
                     safeSend(emitter, completed, SseEmitter.event().name("done").data("{\"conversationId\":" + conversationId + ",\"chatId\":" + chatId + "}"));
                     safeComplete(emitter, completed);
 
-                    checkAndUpgradeHotCache(finalMd5, fullAnswer);
-                    String knowledgeIds = extractKnowledgeIds(finalRelatedKnowledge);
-                    ragPersistenceService.asyncUpdateSimilarQuestion(finalQuestion, fullAnswer, knowledgeIds, finalQuestionVector);
-
                     double topScore = finalRelatedKnowledge.isEmpty() ? 0.0 :
                             finalRelatedKnowledge.stream().mapToDouble(k -> k.getScore() != null ? k.getScore() : 0.0).max().orElse(0.0);
                     long totalMs = tGen - t0;
@@ -1181,15 +899,14 @@ public class RagServiceImpl implements RagService {
                     long rewriteMs = finalTRewrite - finalTPre;
                     long embedMs = finalTEmbed - finalTRewrite;
                     long hydeMs = finalTHyde - finalTEmbed;
-                    long simMs = finalTSimilar - finalTHyde;
-                    long searchMs = finalTKnow - finalTSimilar;
+                    long searchMs = finalTKnow - finalTHyde;
                     long historyMs = finalTHistory - finalTKnow;
                     long genMs = tGen - finalTHistory;
                     long ttftMs = firstTokenAt.get() > 0 ? firstTokenAt.get() - t0 : 0;
                     ragMetricsService.recordRequest(finalSource, preMs, embedMs, searchMs, genMs, totalMs,
                             finalRelatedKnowledge.size(), topScore, ragConfig.isHydeEnabled(), null);
-                    log.info("[RAG-TIME-SUMMARY] pre={}ms rewrite={}ms embed={}ms hyde={}ms sim={}ms search={}ms history={}ms ttft={}ms gen={}ms => total={}ms | source={} intent={} lawType={} retrieved={} topScore={} answerLen={}",
-                            preMs, rewriteMs, embedMs, hydeMs, simMs, searchMs, historyMs, ttftMs, genMs, totalMs,
+                    log.info("[RAG-TIME-SUMMARY] pre={}ms rewrite={}ms embed={}ms hyde={}ms search={}ms history={}ms ttft={}ms gen={}ms => total={}ms | source={} intent={} lawType={} retrieved={} topScore={} answerLen={}",
+                            preMs, rewriteMs, embedMs, hydeMs, searchMs, historyMs, ttftMs, genMs, totalMs,
                             finalSource, finalIntent.name(), finalEntityLawType,
                             finalRelatedKnowledge.size(), String.format("%.4f", topScore), fullAnswer.length());
                 }
@@ -1620,7 +1337,7 @@ public class RagServiceImpl implements RagService {
         if (answer == null || answer.isBlank()) {
             return answer;
         }
-        if ("hot_cache".equals(source) || "similar_question".equals(source) || "non_legal_reject".equals(source)) {
+        if ("non_legal_reject".equals(source)) {
             return answer;
         }
         if (answer.endsWith(COMPLIANCE_DISCLAIMER)) {

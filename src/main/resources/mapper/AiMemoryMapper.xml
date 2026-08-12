@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.lhs.lawmind.agent.memory.AiMemoryMapper">
+<mapper namespace="com.lhs.lawmind.mapper.AiMemoryMapper">
 
-    <resultMap id="AiMemoryMap" type="com.lhs.lawmind.agent.memory.AiMemory">
+    <resultMap id="AiMemoryMap" type="com.lhs.lawmind.entity.AiMemory">
         <id property="id" column="id"/>
         <result property="userId" column="user_id"/>
         <result property="type" column="type"/>
@@ -22,7 +22,7 @@
         <result property="lastAccessedAt" column="last_accessed_at"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.lhs.lawmind.agent.memory.AiMemory"
+    <insert id="insert" parameterType="com.lhs.lawmind.entity.AiMemory"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO ai_memory (user_id, type, title, body, summary,
             origin_session_id, source_session_ids, confidence, importance,
@@ -56,7 +56,7 @@
         LIMIT #{limit}
     </select>
 
-    <update id="update" parameterType="com.lhs.lawmind.agent.memory.AiMemory">
+    <update id="update" parameterType="com.lhs.lawmind.entity.AiMemory">
         UPDATE ai_memory SET
             title = #{title},
             body = #{body},

@@ -16,25 +16,19 @@
 
     <!-- 今日概览卡片 -->
     <el-row :gutter="16" class="stat-cards">
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">今日请求量</div>
           <div class="stat-value">{{ overview.total ?? '-' }}</div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">缓存命中率</div>
-          <div class="stat-value">{{ pct(overview.cacheHitRate) }}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">好评率</div>
           <div class="stat-value">{{ pct(overview.feedbackRate) }}</div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <el-card shadow="hover" class="stat-card">
           <div class="stat-label">平均延迟</div>
           <div class="stat-value">{{ overview.avgLatencyMs ? overview.avgLatencyMs + 'ms' : '-' }}</div>
@@ -243,7 +237,7 @@ const quality = ref({})
 const trendData = ref([])
 const evalReports = ref([])
 
-const sourceKeys = ['hot_cache', 'similar_question', 'law_knowledge', 'llm_direct']
+const sourceKeys = ['law_knowledge', 'llm_direct']
 
 async function loadAll() {
   loading.value = true
@@ -287,8 +281,6 @@ function barPercent(count, total) {
 
 function sourceLabel(src) {
   const map = {
-    hot_cache: '热点缓存',
-    similar_question: '相似问题',
     law_knowledge: '法律知识库',
     llm_direct: 'LLM直答',
     non_legal_reject: '非法律拒答',
@@ -302,8 +294,6 @@ function sourceLabel(src) {
 
 function sourceColor(src) {
   const map = {
-    hot_cache: '#67c23a',
-    similar_question: '#409eff',
     law_knowledge: '#e6a23c',
     llm_direct: '#f56c6c',
     non_legal_reject: '#909399',

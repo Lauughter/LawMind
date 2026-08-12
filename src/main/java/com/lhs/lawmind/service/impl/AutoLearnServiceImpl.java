@@ -6,7 +6,7 @@ import com.lhs.lawmind.entity.LawVectorTask;
 import com.lhs.lawmind.service.*;
 import com.lhs.lawmind.utils.EmbeddingUtil;
 import com.lhs.lawmind.utils.JsonUtil;
-import com.lhs.lawmind.utils.LawKnowledgeRedisUtil;
+import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -35,8 +35,6 @@ public class AutoLearnServiceImpl implements AutoLearnService {
 
     private final LawVectorTaskService lawVectorTaskService;
 
-    private final SimilarQuestionService similarQuestionService;
-
     private final EmbeddingUtil embeddingUtil;
 
     private final LawKnowledgeRedisUtil lawKnowledgeRedisUtil;
@@ -45,14 +43,12 @@ public class AutoLearnServiceImpl implements AutoLearnService {
                                 LawKnowledgeService lawKnowledgeService,
                                 @Lazy AiChatService aiChatService,
                                 LawVectorTaskService lawVectorTaskService,
-                                SimilarQuestionService similarQuestionService,
                                 Optional<EmbeddingUtil> embeddingUtil,
                                 LawKnowledgeRedisUtil lawKnowledgeRedisUtil) {
         this.chatLanguageModel = chatLanguageModel.orElse(null);
         this.lawKnowledgeService = lawKnowledgeService;
         this.aiChatService = aiChatService;
         this.lawVectorTaskService = lawVectorTaskService;
-        this.similarQuestionService = similarQuestionService;
         this.embeddingUtil = embeddingUtil.orElse(null);
         this.lawKnowledgeRedisUtil = lawKnowledgeRedisUtil;
     }
@@ -128,9 +124,6 @@ public class AutoLearnServiceImpl implements AutoLearnService {
             if (!knowledgeIds.isEmpty()) {
                 // 更新聊天记录的knowledge_match字段
                 updateChatKnowledgeMatch(aiChat.getId(), extractedKnowledge);
-
-                // 更新相似问题库的knowledgeIds字段
-                updateSimilarQuestionKnowledgeIds(aiChat.getUserQuestion(), knowledgeIds);
 
                 // 异步向量化并存储法律知识
                 for (Long knowledgeId : knowledgeIds) {
@@ -329,33 +322,4 @@ public class AutoLearnServiceImpl implements AutoLearnService {
         }
     }
 
-    /**
-     * 更新相似问题库的knowledgeIds字段
-     *
-     * @param question 用户问题
-     * @param knowledgeIds 法律知识ID列表
-     */
-    private void updateSimilarQuestionKnowledgeIds(String question, List<Long> knowledgeIds) {
-        try {
-            if (question == null || knowledgeIds.isEmpty()) {
-                return;
-            }
-
-            // 将knowledgeIds转换为逗号分隔的字符串
-            StringBuilder idsStr = new StringBuilder();
-            for (int i = 0; i < knowledgeIds.size(); i++) {
-                idsStr.append(knowledgeIds.get(i));
-                if (i < knowledgeIds.size() - 1) {
-                    idsStr.append(",");
-                }
-            }
-
-            // 调用相似问题服务更新knowledgeIds
-            similarQuestionService.asyncUpdateSimilarQuestionKnowledgeIds(question, idsStr.toString());
-            log.info("更新相似问题库的knowledgeIds字段成功: question={}", question.substring(0, Math.min(50, question.length())));
-
-        } catch (Exception e) {
-            log.error("更新相似问题库的knowledgeIds字段失败: error={}", e.getMessage(), e);
-        }
-    }
 }

@@ -36,9 +36,6 @@ public class RedisIndexCheckTest {
             // 检查法律知识库索引
             checkIndex("idx:law_knowledge");
 
-            // 检查相似问题库索引
-            checkIndex("idx:similar_question");
-
         } catch (Exception e) {
             System.out.println("检查索引失败: " + e.getMessage());
             e.printStackTrace();

@@ -6,13 +6,13 @@
 
     <insert id="insert" parameterType="com.lhs.lawmind.entity.RagMetricsDaily" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO rag_metrics_daily (
-            metric_date, total_requests, cache_hits, similar_hits, knowledge_hits,
+            metric_date, total_requests, knowledge_hits,
             llm_direct_count, non_legal_count, avg_latency_ms, p50_latency_ms, p95_latency_ms,
             total_likes, total_dislikes, avg_top_score, llm_fallback_rate, hyde_count,
             feedback_inaccurate, feedback_wrong_citation, feedback_irrelevant,
             feedback_too_vague, feedback_other
         ) VALUES (
-            #{metricDate}, #{totalRequests}, #{cacheHits}, #{similarHits}, #{knowledgeHits},
+            #{metricDate}, #{totalRequests}, #{knowledgeHits},
             #{llmDirectCount}, #{nonLegalCount}, #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
             #{totalLikes}, #{totalDislikes}, #{avgTopScore}, #{llmFallbackRate}, #{hydeCount},
             #{feedbackInaccurate}, #{feedbackWrongCitation}, #{feedbackIrrelevant},
@@ -22,21 +22,19 @@
 
     <insert id="upsert" parameterType="com.lhs.lawmind.entity.RagMetricsDaily">
         INSERT INTO rag_metrics_daily (
-            metric_date, total_requests, cache_hits, similar_hits, knowledge_hits,
+            metric_date, total_requests, knowledge_hits,
             llm_direct_count, non_legal_count, avg_latency_ms, p50_latency_ms, p95_latency_ms,
             total_likes, total_dislikes, avg_top_score, llm_fallback_rate, hyde_count,
             feedback_inaccurate, feedback_wrong_citation, feedback_irrelevant,
             feedback_too_vague, feedback_other
         ) VALUES (
-            #{metricDate}, #{totalRequests}, #{cacheHits}, #{similarHits}, #{knowledgeHits},
+            #{metricDate}, #{totalRequests}, #{knowledgeHits},
             #{llmDirectCount}, #{nonLegalCount}, #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
             #{totalLikes}, #{totalDislikes}, #{avgTopScore}, #{llmFallbackRate}, #{hydeCount},
             #{feedbackInaccurate}, #{feedbackWrongCitation}, #{feedbackIrrelevant},
             #{feedbackTooVague}, #{feedbackOther}
         ) ON DUPLICATE KEY UPDATE
             total_requests = VALUES(total_requests),
-            cache_hits = VALUES(cache_hits),
-            similar_hits = VALUES(similar_hits),
             knowledge_hits = VALUES(knowledge_hits),
             llm_direct_count = VALUES(llm_direct_count),
             non_legal_count = VALUES(non_legal_count),

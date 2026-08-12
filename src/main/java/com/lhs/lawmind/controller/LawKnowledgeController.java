@@ -1,6 +1,5 @@
 package com.lhs.lawmind.controller;
 
-import com.lhs.lawmind.aop.annotation.RateLimit;
 import com.lhs.lawmind.common.PageResult;
 import com.lhs.lawmind.common.Result;
 import com.lhs.lawmind.context.RequestContext;
@@ -35,7 +34,6 @@ public class LawKnowledgeController {
      * @param type 法律知识类型过滤，可选
      * @return Result对象，包含法律知识列表、总记录数和状态码
      */
-    @RateLimit(limit = 60, windowSeconds = 60)
     @GetMapping("/list")
     public Result<PageResult<LawKnowledge>> list(@RequestParam(defaultValue = "1") int page,
                         @RequestParam(defaultValue = "10") int pageSize,
@@ -87,7 +85,6 @@ public class LawKnowledgeController {
      * @param page 当前页码，默认为1
      * @param pageSize 每页记录数，默认为10
      */
-    @RateLimit(limit = 30, windowSeconds = 60)
     @GetMapping("/search")
     public Result<PageResult<LawKnowledge>> search(@RequestParam String keyword,
                           @RequestParam(defaultValue = "1") int page,

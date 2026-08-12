@@ -1,9 +1,9 @@
 package com.lhs.lawmind.agent.memory;
 
 import com.lhs.lawmind.utils.EmbeddingUtil;
-import com.lhs.lawmind.utils.RedisVectorUtil;
-import com.lhs.lawmind.utils.RedisVectorUtil.SearchResult;
-import com.lhs.lawmind.utils.RedisIndexUtil;
+import com.lhs.lawmind.utils.redis.RedisVectorUtil;
+import com.lhs.lawmind.utils.redis.RedisVectorUtil.SearchResult;
+import com.lhs.lawmind.utils.redis.RedisIndexUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.lhs.lawmind.entity.AiMemory;
+import com.lhs.lawmind.mapper.AiMemoryMapper;
 
 /**
  * 记忆存储层 —— MySQL CRUD + Redis 向量索引。

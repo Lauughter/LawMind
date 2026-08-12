@@ -1,0 +1,66 @@
+# 文档中央引用图（Reference Map）
+
+> 版本：V0.1 | 日期：{{YYYY-MM-DD}} | 状态：✅ 生效
+> **单一事实来源：所有文档的引用关系只在本文件登记一处。** 用法见 [doc-writing.md](doc-writing.md) 第 4 章。
+
+---
+
+## 如何使用
+
+- **查上游**：看某文档所在行的「引用（上游）」列 = 它依赖谁。
+- **查下游（关键）**：修改文档 X 时，grep 下方所有表的「引用（上游）」列，凡是包含 X 的行 = X 的下游，必须检查是否需同步。
+- **新增文档**：按 [doc-writing.md](doc-writing.md) 4.4 流程在此登记。
+- **删除文档**：同步删除本文件对应行 + 根 README 索引行 + 所有引用它的文档中的链接。
+
+---
+
+## 一、00-conventions（规范层）
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 规范层索引 | ✅ | development-standards.md, doc-writing.md, reference-map.md |
+| development-standards.md | 开发规范与评审标准 | ✅ | {{事实源}} |
+| doc-writing.md | 文档编写规范 | ✅ | reference-map.md, ../README.md |
+| reference-map.md | 中央引用图 | ✅ | 全部文档（登记） |
+
+## 二、01-architecture（设计层）
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 设计层索引 | ✅ | overview.md, {{模块设计文档}} |
+
+> 其余文档按项目实际情况追加登记。
+
+## 三、02-db（数据库层）{{若有}}
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 数据库层索引 + 表清单 | ✅ | data-dictionary.md, conventions.md, tables/* |
+| data-dictionary.md | 完整数据字典 | ✅ | {{schema SQL（事实源）}} |
+| tables/{{table}}.md | {{表}} | ✅/🚧 | data-dictionary.md, conventions.md, {{相关设计}} |
+
+## 四、03-api（接口层）{{若有}}
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 接口层索引 | ✅ | common.md, modules/* |
+| common.md | 通用约定 | ✅ | {{源码（事实源）}} |
+| modules/{{module}}.md | {{模块}}接口 | ✅/🚧 | common.md, {{相关设计}}, {{相关表}} |
+
+## 五、04-environments（环境层）{{若有}}
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 环境层索引 + 差异对比 | ✅ | development.md, test.md, production.md |
+
+## 六、05-infrastructure（基础设施层）{{若有}}
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 基础设施层索引 | ✅ | {{各 infra 文档}} |
+
+## 七、06-reference（参考层）{{若有}}
+
+| 文档 | 主题 | 状态 | 引用（上游） |
+|------|------|:---:|------------|
+| README.md | 参考层索引 | ✅ | {{参考文档}} |

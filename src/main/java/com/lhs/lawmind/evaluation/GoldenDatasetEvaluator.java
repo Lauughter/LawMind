@@ -133,7 +133,7 @@ public class GoldenDatasetEvaluator {
         return switch (expected) {
             case "non_legal_reject" -> isRejection;
             case "llm_direct" -> !isRejection && !hasKnowledge;
-            case "law_knowledge", "similar_question", "hot_cache" -> hasKnowledge;
+            case "law_knowledge" -> hasKnowledge;
             default -> true;
         };
     }

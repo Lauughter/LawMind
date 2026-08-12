@@ -116,8 +116,6 @@ public class MetricsPersistenceScheduler {
         // 来源分布
         Map<String, Long> sourceDist = (Map<String, Long>) overview.get("sourceDistribution");
         if (sourceDist != null) {
-            e.setCacheHits(sourceDist.getOrDefault("hot_cache", 0L));
-            e.setSimilarHits(sourceDist.getOrDefault("similar_question", 0L));
             e.setKnowledgeHits(sourceDist.getOrDefault("law_knowledge", 0L));
             e.setLlmDirectCount(sourceDist.getOrDefault("llm_direct", 0L));
             e.setNonLegalCount(sourceDist.getOrDefault("non_legal_reject", 0L));

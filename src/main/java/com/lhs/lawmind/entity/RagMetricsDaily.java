@@ -10,8 +10,6 @@ public class RagMetricsDaily {
     private Long id;
     private Date metricDate;
     private Long totalRequests;
-    private Long cacheHits;
-    private Long similarHits;
     private Long knowledgeHits;
     private Long llmDirectCount;
     private Long nonLegalCount;

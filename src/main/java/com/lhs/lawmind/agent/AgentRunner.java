@@ -156,8 +156,8 @@ public class AgentRunner {
 
     /**
      * 使用自定义 System Prompt 执行 Agent 推理。
-     * 合同审查等专项场景可通过此方法注入领域专用 Prompt，
-     * 使 Agent 以特定角色和审查框架执行任务。
+     * 专项场景可通过此方法注入领域专用 Prompt，
+     * 使 Agent 以特定角色和框架执行任务。
      */
     public AgentResult execute(String userQuestion, String effectiveSystemPrompt) {
         return execute(userQuestion, effectiveSystemPrompt, null, null);

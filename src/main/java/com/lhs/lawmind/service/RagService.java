@@ -2,7 +2,6 @@ package com.lhs.lawmind.service;
 
 import com.lhs.lawmind.dto.AIChatResponse;
 import com.lhs.lawmind.entity.LawKnowledge;
-import com.lhs.lawmind.entity.SimilarQuestion;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
@@ -19,23 +18,6 @@ public interface RagService {
      * @return AI回答响应
      */
     AIChatResponse processQuestion(Long userId, String question, Long conversationId);
-
-    /**
-     * 查询热点缓存
-     *
-     * @param md5 问题MD5
-     * @return 缓存的答案，未命中返回null
-     */
-    String queryHotCache(String md5);
-
-    /**
-     * 搜索相似问题
-     *
-     * @param originalQuestion 原始问题
-     * @param questionVector 问题向量
-     * @return 匹配的相似问题，未命中返回null
-     */
-    SimilarQuestion searchSimilarQuestion(String originalQuestion, float[] questionVector);
 
     /**
      * 搜索法律知识
@@ -62,28 +44,10 @@ public interface RagService {
      * @param question        用户问题
      * @param answer          AI回答
      * @param knowledgeMatch  匹配的知识JSON
-     * @param source          回答来源（hot_cache/similar_question/law_knowledge/llm_direct）
+     * @param source          回答来源（law_knowledge/llm_direct 等）
      * @return 生成的聊天记录ID
      */
     Long asyncLogVisit(Long userId, String question, String answer, String knowledgeMatch, String source, Long conversationId);
-
-    /**
-     * 异步更新相似问题库
-     *
-     * @param question       用户问题
-     * @param answer         AI回答
-     * @param knowledgeIds   关联的知识点ID
-     * @param questionVector 问题向量
-     */
-    void asyncUpdateSimilarQuestion(String question, String answer, String knowledgeIds, float[] questionVector);
-
-    /**
-     * 检查并升级热点缓存
-     *
-     * @param md5    问题MD5
-     * @param answer 答案
-     */
-    void checkAndUpgradeHotCache(String md5, String answer);
 
     /**
      * 异步更新法律知识到聊天记录
@@ -94,19 +58,8 @@ public interface RagService {
     void asyncUpdateKnowledgeToChatRecord(Long chatId, String knowledgeIds);
 
     /**
-     * 异步插入问题和法律知识到聊天记录
-     *
-     * @param userId      用户ID
-     * @param question    用户问题
-     * @param answer      AI回答
-     * @param knowledgeIds 知识点ID列表，逗号分隔
-     */
-    void asyncInsertQuestionAndKnowledge(Long userId, String question, String answer, String knowledgeIds, Long conversationId);
-
-    /**
      * 流式处理用户问题（SSE）
      * Steps 1-5 同步执行，Step 6 使用 StreamingChatLanguageModel 逐 token 推送
-     * 缓存/相似问题命中时直接一次性发送完整答案
      *
      * @param userId         用户ID
      * @param question       用户问题

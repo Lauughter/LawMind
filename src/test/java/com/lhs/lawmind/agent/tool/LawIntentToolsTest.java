@@ -1,7 +1,8 @@
 package com.lhs.lawmind.agent.tool;
 
-import com.lhs.lawmind.utils.IntentClassifier;
-import com.lhs.lawmind.utils.LegalQueryExpander;
+import com.lhs.lawmind.agent.gate.IntentClassifierEnhanced;
+import com.lhs.lawmind.agent.gate.IntentType;
+import com.lhs.lawmind.utils.query.LegalQueryExpander;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,7 @@ import static org.mockito.Mockito.when;
 class LawIntentToolsTest {
 
     @Mock
-    private IntentClassifier intentClassifier;
+    private IntentClassifierEnhanced intentClassifier;
     @Mock
     private LegalQueryExpander legalQueryExpander;
 
@@ -29,11 +30,11 @@ class LawIntentToolsTest {
 
     @Test
     void classifyLegalIntent_shouldReturnArticleLookupInfo() {
-        when(intentClassifier.classify("劳动合同法第三十九条是什么"))
-                .thenReturn(IntentClassifier.Intent.ARTICLE_LOOKUP);
-        when(intentClassifier.adjustTopK(IntentClassifier.Intent.ARTICLE_LOOKUP, 15))
+        when(intentClassifier.classifyType("劳动合同法第三十九条是什么"))
+                .thenReturn(IntentType.ARTICLE_LOOKUP);
+        when(intentClassifier.adjustTopK(IntentType.ARTICLE_LOOKUP, 15))
                 .thenReturn(20);
-        when(intentClassifier.useDeepRetrieval(IntentClassifier.Intent.ARTICLE_LOOKUP))
+        when(intentClassifier.useDeepRetrieval(IntentType.ARTICLE_LOOKUP))
                 .thenReturn(true);
 
         String result = lawIntentTools.classifyLegalIntent("劳动合同法第三十九条是什么");
@@ -48,11 +49,11 @@ class LawIntentToolsTest {
 
     @Test
     void classifyLegalIntent_shouldReturnCalculationInfo() {
-        when(intentClassifier.classify("工伤赔偿多少钱"))
-                .thenReturn(IntentClassifier.Intent.CALCULATION);
-        when(intentClassifier.adjustTopK(IntentClassifier.Intent.CALCULATION, 15))
+        when(intentClassifier.classifyType("工伤赔偿多少钱"))
+                .thenReturn(IntentType.CALCULATION);
+        when(intentClassifier.adjustTopK(IntentType.CALCULATION, 15))
                 .thenReturn(13);
-        when(intentClassifier.useDeepRetrieval(IntentClassifier.Intent.CALCULATION))
+        when(intentClassifier.useDeepRetrieval(IntentType.CALCULATION))
                 .thenReturn(false);
 
         String result = lawIntentTools.classifyLegalIntent("工伤赔偿多少钱");
@@ -65,11 +66,11 @@ class LawIntentToolsTest {
 
     @Test
     void classifyLegalIntent_shouldReturnDefaultConsultation() {
-        when(intentClassifier.classify("我被公司开除了怎么办"))
-                .thenReturn(IntentClassifier.Intent.LEGAL_CONSULTATION);
-        when(intentClassifier.adjustTopK(IntentClassifier.Intent.LEGAL_CONSULTATION, 15))
+        when(intentClassifier.classifyType("我被公司开除了怎么办"))
+                .thenReturn(IntentType.LEGAL_CONSULTATION);
+        when(intentClassifier.adjustTopK(IntentType.LEGAL_CONSULTATION, 15))
                 .thenReturn(15);
-        when(intentClassifier.useDeepRetrieval(IntentClassifier.Intent.LEGAL_CONSULTATION))
+        when(intentClassifier.useDeepRetrieval(IntentType.LEGAL_CONSULTATION))
                 .thenReturn(false);
 
         String result = lawIntentTools.classifyLegalIntent("我被公司开除了怎么办");
@@ -81,7 +82,7 @@ class LawIntentToolsTest {
 
     @Test
     void classifyLegalIntent_shouldReturnError_whenClassifierFails() {
-        when(intentClassifier.classify(anyString()))
+        when(intentClassifier.classifyType(anyString()))
                 .thenThrow(new RuntimeException("分类器内部错误"));
 
         String result = lawIntentTools.classifyLegalIntent("测试问题");

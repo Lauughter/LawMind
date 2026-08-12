@@ -42,11 +42,6 @@ public class ControllerLogAspect {
             return joinPoint.proceed();
         }
 
-        // 跳过 Sentinel blockHandler/fallback 方法
-        if (isSentinelHandler(method)) {
-            return joinPoint.proceed();
-        }
-
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = method.getName();
 
@@ -105,18 +100,5 @@ public class ControllerLogAspect {
             paramMap.put(name, arg);
         }
         return paramMap.toString();
-    }
-
-    /**
-     * 判断是否为Sentinel的blockHandler或fallback方法
-     */
-    private boolean isSentinelHandler(Method method) {
-        for (Class<?> paramType : method.getParameterTypes()) {
-            if ("BlockException".equals(paramType.getSimpleName())) {
-                return true;
-            }
-        }
-        String name = method.getName();
-        return name.startsWith("handleBlock") || name.startsWith("handleFallback");
     }
 }

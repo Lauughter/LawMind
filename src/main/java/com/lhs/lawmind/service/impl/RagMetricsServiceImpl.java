@@ -197,7 +197,7 @@ public class RagMetricsServiceImpl implements RagMetricsService {
         result.put("llmFallbackRate", total > 0 ? (double) llmDirect / total : 0.0);
 
         // 各来源的点踩率
-        for (String src : List.of("hot_cache", "similar_question", "law_knowledge", "llm_direct")) {
+        for (String src : List.of("law_knowledge", "llm_direct")) {
             long srcCount = getLong(raw, "src:" + src);
             // 反馈计数是全局的，这里用总数近似；精确统计需要按来源拆分 feedback
             result.put("sourceCount_" + src, srcCount);
@@ -260,10 +260,9 @@ public class RagMetricsServiceImpl implements RagMetricsService {
         }
         long total = getLong(raw, "total");
         result.put("total", total);
-        result.put("cacheHitRate", total > 0 ? (double) getLong(raw, "src:hot_cache") / total : 0.0);
 
         Map<String, Long> sourceDist = new LinkedHashMap<>();
-        for (String src : List.of("hot_cache", "similar_question", "law_knowledge", "llm_direct", "non_legal_reject")) {
+        for (String src : List.of("law_knowledge", "llm_direct", "non_legal_reject")) {
             sourceDist.put(src, getLong(raw, "src:" + src));
         }
         result.put("sourceDistribution", sourceDist);
@@ -336,8 +335,6 @@ public class RagMetricsServiceImpl implements RagMetricsService {
                 .atZone(ZoneId.systemDefault()).toLocalDate().format(DATE_FMT));
         result.put("llmFallbackRate", e.getLlmFallbackRate() != null
                 ? e.getLlmFallbackRate().doubleValue() : 0.0);
-        result.put("sourceCount_hot_cache", nvl(e.getCacheHits()));
-        result.put("sourceCount_similar_question", nvl(e.getSimilarHits()));
         result.put("sourceCount_law_knowledge", nvl(e.getKnowledgeHits()));
         result.put("sourceCount_llm_direct", nvl(e.getLlmDirectCount()));
         result.put("feedbackUp", nvl(e.getTotalLikes()));
@@ -362,11 +359,8 @@ public class RagMetricsServiceImpl implements RagMetricsService {
     private Map<String, Object> dayOverviewFromEntity(RagMetricsDaily e, Map<String, Object> result) {
         long total = nvl(e.getTotalRequests());
         result.put("total", total);
-        result.put("cacheHitRate", total > 0 ? (double) nvl(e.getCacheHits()) / total : 0.0);
 
         Map<String, Long> sourceDist = new LinkedHashMap<>();
-        sourceDist.put("hot_cache", nvl(e.getCacheHits()));
-        sourceDist.put("similar_question", nvl(e.getSimilarHits()));
         sourceDist.put("law_knowledge", nvl(e.getKnowledgeHits()));
         sourceDist.put("llm_direct", nvl(e.getLlmDirectCount()));
         sourceDist.put("non_legal_reject", nvl(e.getNonLegalCount()));

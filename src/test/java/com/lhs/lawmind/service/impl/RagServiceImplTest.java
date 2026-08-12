@@ -1,5 +1,7 @@
 package com.lhs.lawmind.service.impl;
 
+import com.lhs.lawmind.agent.gate.IntentClassifierEnhanced;
+import com.lhs.lawmind.agent.gate.IntentType;
 import com.lhs.lawmind.config.RagConfig;
 import com.lhs.lawmind.dto.AIChatResponse;
 import com.lhs.lawmind.entity.LawKnowledge;
@@ -10,9 +12,13 @@ import com.lhs.lawmind.service.HybridSearchService;
 import com.lhs.lawmind.service.LawKnowledgeService;
 import com.lhs.lawmind.service.RerankService;
 import com.lhs.lawmind.service.RagMetricsService;
-import com.lhs.lawmind.service.SimilarQuestionService;
 import com.lhs.lawmind.service.SysConfigService;
-import com.lhs.lawmind.utils.*;
+import com.lhs.lawmind.utils.EmbeddingUtil;
+import com.lhs.lawmind.utils.query.LegalEntityExtractor;
+import com.lhs.lawmind.utils.query.LegalQueryExpander;
+import com.lhs.lawmind.utils.query.SearchResultDiversifier;
+import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
+import com.lhs.lawmind.utils.redis.RedisVectorUtil;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -38,20 +44,17 @@ class RagServiceImplTest {
 
     @Mock private ChatLanguageModel chatLanguageModel;
     @Mock private EmbeddingUtil embeddingUtil;
-    @Mock private HotCacheUtil hotCacheUtil;
-    @Mock private SimilarQuestionRedisUtil similarQuestionRedisUtil;
     @Mock private LawKnowledgeRedisUtil lawKnowledgeRedisUtil;
-    @Mock private VisitStatsUtil visitStatsUtil;
     @Mock private RagConfig ragConfig;
     @Mock private LawKnowledgeService lawKnowledgeService;
     @Mock private AiChatService aiChatService;
     @Mock private AiChatMapper aiChatMapper;
-    @Mock private SimilarQuestionService similarQuestionService;
     @Mock private AutoLearnService autoLearnService;
     @Mock private HybridSearchService hybridSearchService;
     @Mock private RerankService rerankService;
     @Mock private LegalQueryExpander legalQueryExpander;
     @Mock private SearchResultDiversifier searchResultDiversifier;
+    @Mock private IntentClassifierEnhanced intentClassifierEnhanced;
     @Mock private SysConfigService sysConfigService;
     @Mock private RagPersistenceService ragPersistenceService;
     @Mock private RagMetricsService ragMetricsService;
@@ -64,21 +67,17 @@ class RagServiceImplTest {
                 Optional.of(chatLanguageModel),
                 Optional.empty(),
                 Optional.of(embeddingUtil),
-                hotCacheUtil,
-                similarQuestionRedisUtil,
                 lawKnowledgeRedisUtil,
-                visitStatsUtil,
                 ragConfig,
                 lawKnowledgeService,
                 aiChatService,
                 aiChatMapper,
-                similarQuestionService,
                 autoLearnService,
                 hybridSearchService,
                 rerankService,
                 legalQueryExpander,
                 searchResultDiversifier,
-                new IntentClassifier(),
+                intentClassifierEnhanced,
                 new LegalEntityExtractor(),
                 sysConfigService,
                 ragPersistenceService,
@@ -93,18 +92,6 @@ class RagServiceImplTest {
 
         assertThat(result.getAnswer()).isEqualTo("抱歉，我是一个法律咨询助手，只能回答与法律相关的问题。");
         assertThat(result.getRelatedKnowledge()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Hot cache hit returns cached answer immediately")
-    void hotCacheHit_returnsCachedAnswer() {
-        when(ragConfig.getSearchTopK()).thenReturn(5);
-        when(legalQueryExpander.expandQuery(anyString())).thenAnswer(inv -> inv.getArgument(0));
-        when(hotCacheUtil.getHotQuestionCache(anyString())).thenReturn("缓存的答案");
-
-        AIChatResponse result = ragService.processQuestion(1L, "加班不给加班费怎么办？", null);
-
-        assertThat(result.getAnswer()).isEqualTo("缓存的答案");
     }
 
     @Test
@@ -169,12 +156,11 @@ class RagServiceImplTest {
         when(ragConfig.isMmrEnabled()).thenReturn(false);
         when(ragConfig.getFilterThreshold()).thenReturn(0.65);
         when(ragConfig.getLawKnowledgeThreshold()).thenReturn(0.70);
-        when(visitStatsUtil.getVisitStats(anyString())).thenReturn(new VisitStatsUtil.VisitStats(0, 0, 0));
-        when(hotCacheUtil.getHotQuestionCache(anyString())).thenReturn(null);
         when(legalQueryExpander.expandQuery(anyString())).thenAnswer(inv -> inv.getArgument(0));
         when(embeddingUtil.embed(anyString())).thenReturn(new float[1536]);
-        when(similarQuestionRedisUtil.searchSimilarQuestions(any(), anyInt()))
-                .thenReturn(new ArrayList<>());
+        when(intentClassifierEnhanced.classifyType(anyString())).thenReturn(IntentType.LEGAL_CONSULTATION);
+        when(intentClassifierEnhanced.adjustTopK(any(IntentType.class), anyInt()))
+                .thenAnswer(inv -> inv.getArgument(1));
         when(chatLanguageModel.generate(any(ChatMessage.class))).thenReturn(null);
     }
 }

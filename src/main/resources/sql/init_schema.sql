@@ -165,26 +165,7 @@ CREATE TABLE IF NOT EXISTS sys_config (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 -- ============================================================
--- 9. 热点问题缓存表
--- ============================================================
-CREATE TABLE IF NOT EXISTS hot_question (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    question_md5 CHAR(32) NOT NULL COMMENT '问题MD5(唯一标识)',
-    original_question TEXT NOT NULL COMMENT '原始问题文本',
-    cached_answer TEXT COMMENT '缓存的答案',
-    knowledge_ids VARCHAR(500) COMMENT '关联知识点ID(逗号分隔)',
-    visit_count INT DEFAULT 1 COMMENT '访问次数',
-    first_visit_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '首次访问时间',
-    last_visit_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '最后访问时间',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    expire_time DATETIME COMMENT '缓存过期时间',
-    status INT DEFAULT 0 COMMENT '缓存状态: 0-有效 1-已过期 2-已淘汰',
-    UNIQUE INDEX idx_question_md5 (question_md5),
-    INDEX idx_status_expire (status, expire_time)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='热点问题缓存表';
-
--- ============================================================
--- 10. 安全审计日志表
+-- 9. 安全审计日志表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS security_audit_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -208,7 +189,7 @@ CREATE TABLE IF NOT EXISTS security_audit_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安全审计日志表';
 
 -- ============================================================
--- 11. 反馈审核日志表
+-- 10. 反馈审核日志表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS review_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -225,14 +206,12 @@ CREATE TABLE IF NOT EXISTS review_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='反馈审核日志表';
 
 -- ============================================================
--- 12. RAG指标日报表
+-- 11. RAG指标日报表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS rag_metrics_daily (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     metric_date DATE NOT NULL COMMENT '统计日期',
     total_requests BIGINT DEFAULT 0 COMMENT '总请求数',
-    cache_hits BIGINT DEFAULT 0 COMMENT '缓存命中数',
-    similar_hits BIGINT DEFAULT 0 COMMENT '相似问题命中数',
     knowledge_hits BIGINT DEFAULT 0 COMMENT '知识库命中数',
     llm_direct_count BIGINT DEFAULT 0 COMMENT 'LLM直接回答数',
     non_legal_count BIGINT DEFAULT 0 COMMENT '非法律问题拦截数',
@@ -255,7 +234,7 @@ CREATE TABLE IF NOT EXISTS rag_metrics_daily (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='RAG指标日报表';
 
 -- ============================================================
--- 13. 评估报告表
+-- 12. 评估报告表
 -- ============================================================
 CREATE TABLE IF NOT EXISTS evaluation_report (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -279,7 +258,7 @@ CREATE TABLE IF NOT EXISTS evaluation_report (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评估报告表';
 
 -- ============================================================
--- 14. 统一记忆表（四类型记忆模型）
+-- 13. 统一记忆表（四类型记忆模型）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS ai_memory (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

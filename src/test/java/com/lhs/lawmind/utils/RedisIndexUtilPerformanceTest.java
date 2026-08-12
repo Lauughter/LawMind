@@ -1,5 +1,7 @@
 package com.lhs.lawmind.utils;
 
+import com.lhs.lawmind.utils.redis.IndexStatusCache;
+import com.lhs.lawmind.utils.redis.RedisIndexUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;

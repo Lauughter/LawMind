@@ -118,22 +118,11 @@ rag:
   redis:
     index:
       law-vector: "idx:law_knowledge"
-      similar-question: "idx:similar_question"
     key-prefix:
-      hot-question: "hot:question:"
       law-vector: "law:vector:"
-      similar-question: "similar:question:"
   threshold:
-    similar-question: 0.85
     law-knowledge: 0.55
     filter: 0.40
-  hot-cache:
-    initial-ttl-days: 30
-    eviction-days: 7
-  hot-threshold:
-    5-minutes: 3
-    1-hour: 10
-    1-day: 30
   vector:
     dimension: 1536
   search:
@@ -184,12 +173,6 @@ rag:
           max-results: 0
           full-detail-top: 0
           preserve-original-terms: true
-        searchSimilarQuestions:
-          layer: 1
-          compress: true
-          max-results: 3
-          full-detail-top: 2
-          preserve-original-terms: false
         classifyLegalIntent:
           layer: 0
           compress: false

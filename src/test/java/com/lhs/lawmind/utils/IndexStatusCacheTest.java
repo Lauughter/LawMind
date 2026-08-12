@@ -1,5 +1,6 @@
 package com.lhs.lawmind.utils;
 
+import com.lhs.lawmind.utils.redis.IndexStatusCache;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;

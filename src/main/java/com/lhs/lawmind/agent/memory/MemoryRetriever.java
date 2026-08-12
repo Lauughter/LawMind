@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import com.lhs.lawmind.entity.AiMemory;
 
 /**
  * 两级混合检索器 —— 一级索引注入 + 二级语义自动匹配。

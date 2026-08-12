@@ -48,7 +48,6 @@ class IntentGateTest {
                                 "帮我写一份", "协议模板", "借条怎么写", "离婚协议怎么写"),
                         List.of("什么是", "是什么意思", "名词解释", "法律概念",
                                 "指的是什么", "通俗解释", "普法"),
-                        List.of(),
                         ""
                 ),
                 new IntentGateConfig.ComplexityConfig(

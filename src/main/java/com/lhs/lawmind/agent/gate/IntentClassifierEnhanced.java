@@ -12,13 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Layer 2 — 增强版意图分类器。
+ * 意图分类器（统一实现，替代原 {@code utils.IntentClassifier}）。
  *
- * <p>将用户问题分类为 7 种意图类型。规则优先匹配（目标覆盖 80%+），
- * 未命中时走 LLM 轻量分类（~60 tokens prompt）。</p>
- *
- * <p>与现有 {@link com.lhs.lawmind.utils.IntentClassifier} 独立并存，
- * 原有 4 种意图保持不变。</p>
+ * <p>将用户问题分类为 6 种意图类型。规则优先匹配（目标覆盖 80%+），
+ * 未命中时走 LLM 轻量分类（~60 tokens prompt）。同时提供 RAG 检索的
+ * Top-K 调整与深度检索判断。</p>
  */
 @Slf4j
 @Component
@@ -43,7 +41,6 @@ public class IntentClassifierEnhanced {
         rules.put(IntentType.CASE_SEARCH, config.intent().caseSearchKeywords());
         rules.put(IntentType.DOCUMENT_DRAFTING, config.intent().documentDraftingKeywords());
         rules.put(IntentType.LEGAL_KNOWLEDGE, config.intent().legalKnowledgeKeywords());
-        rules.put(IntentType.CONTRACT_REVIEW, config.intent().contractReviewKeywords());
         return rules;
     }
 
@@ -80,6 +77,32 @@ public class IntentClassifierEnhanced {
         }
 
         return llmClassify(trimmed);
+    }
+
+    /**
+     * 分类并直接返回意图类型（供 RAG 管道 / Agent 工具使用）。
+     */
+    public IntentType classifyType(String question) {
+        return classify(question).intentType();
+    }
+
+    /**
+     * 根据意图调整 RAG 检索 Top-K（法条查询加量、计算类减量等）。
+     */
+    public int adjustTopK(IntentType intent, int defaultTopK) {
+        return switch (intent) {
+            case ARTICLE_LOOKUP -> Math.max(defaultTopK + 5, 15);
+            case CASE_SEARCH -> Math.max(defaultTopK + 3, 13);
+            case CALCULATION -> Math.max(defaultTopK - 2, 3);
+            default -> defaultTopK;
+        };
+    }
+
+    /**
+     * 判断是否启用深度检索（多路召回 + 更多结果）。
+     */
+    public boolean useDeepRetrieval(IntentType intent) {
+        return intent == IntentType.ARTICLE_LOOKUP || intent == IntentType.CASE_SEARCH;
     }
 
     /**
@@ -144,8 +167,6 @@ public class IntentClassifierEnhanced {
             return IntentType.DOCUMENT_DRAFTING;
         if (upper.contains("知识") || upper.contains("概念") || upper.contains("KNOWLEDGE"))
             return IntentType.LEGAL_KNOWLEDGE;
-        if (upper.contains("审查") || upper.contains("审合同") || upper.contains("REVIEW"))
-            return IntentType.CONTRACT_REVIEW;
 
         log.warn("[IntentClassifier] 无法解析 LLM 输出，默认 LEGAL_CONSULTATION: output={}", llmOutput);
         return IntentType.LEGAL_CONSULTATION;

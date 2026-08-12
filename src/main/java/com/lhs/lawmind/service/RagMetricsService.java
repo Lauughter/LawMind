@@ -11,7 +11,7 @@ public interface RagMetricsService {
     /**
      * 记录一次 RAG 请求的指标数据
      *
-     * @param source       数据来源（hot_cache/similar_question/law_knowledge/llm_direct/non_legal_reject）
+     * @param source       数据来源（law_knowledge/llm_direct/non_legal_reject）
      * @param preMs        预处理耗时（毫秒）
      * @param embedMs      向量化耗时（毫秒）
      * @param searchMs     检索耗时（毫秒）

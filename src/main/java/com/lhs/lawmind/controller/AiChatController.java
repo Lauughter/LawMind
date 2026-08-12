@@ -1,7 +1,5 @@
 package com.lhs.lawmind.controller;
 
-import com.alibaba.csp.sentinel.annotation.SentinelResource;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.lhs.lawmind.aop.annotation.Log;
 import com.lhs.lawmind.common.PageResult;
 import com.lhs.lawmind.common.Result;
@@ -138,13 +136,12 @@ public class AiChatController {
     }
 
     /**
-     * AI 问答接口 - 已添加 Sentinel 限流
+     * AI 问答接口
      *
      * 安全加固：从RequestContext获取用户ID，防止用户篡改
      */
     @PostMapping("/ask")
     @Log("AI问答请求")
-    @SentinelResource(value = "askQuestion", blockHandler = "handleBlock", fallback = "handleFallback")
     public Result<AIChatResponse> ask(@RequestBody Map<String, Object> params) {
         // 从RequestContext获取用户ID（安全加固，防止篡改）
         Long userId = RequestContext.getUserId();
@@ -333,30 +330,4 @@ public class AiChatController {
         }
     }
 
-    /**
-     * Sentinel 限流处理方法
-     */
-    public Result<AIChatResponse> handleBlock(Map<String, Object> params, BlockException ex) {
-        // 设置 HTTP 429 Too Many Requests 状态码
-        jakarta.servlet.http.HttpServletResponse response =
-            ((org.springframework.web.context.request.ServletRequestAttributes)
-                org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getResponse();
-        if (response != null) {
-            response.setStatus(429);
-        }
-
-        log.error("=== SENTINEL 限流触发 ===");
-        log.error("资源名：{}", ex.getRule().getResource());
-        log.error("限流类型：{}", ex.getRule().getClass().getSimpleName());
-        return Result.error(429, "请求过于频繁，请稍后再试");
-    }
-
-    /**
-     * Sentinel 降级处理方法
-     */
-    public Result<AIChatResponse> handleFallback(Map<String, Object> params, Throwable ex) {
-        log.error("=== SENTINEL 降级触发 ===");
-        log.error("异常信息：{}", ex.getMessage(), ex);
-        return Result.error(503, "服务暂时不可用，请稍后再试");
-    }
 }

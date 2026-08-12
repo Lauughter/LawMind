@@ -11,7 +11,7 @@
 
 ## 项目简介
 
-LawMind 是一款面向中国法律垂直场景的智能问答平台，基于 **Spring Boot 3.5 + LangChain4j** 构建。系统支持法律知识检索、法条查询、金额计算、合同审查、文书起草等常见法律服务场景，核心能力包括：
+LawMind 是一款面向中国法律垂直场景的智能问答平台，基于 **Spring Boot 3.5 + LangChain4j** 构建。系统支持法律知识检索、法条查询、金额计算、文书起草等常见法律服务场景，核心能力包括：
 
 - **多级 RAG 混合检索管道**：BM25 全文 + 向量语义 → RRF 融合 → Rerank 精排 → MMR 去重 → 双阈值过滤
 - **ReAct 多工具 Agent**：7 个法律工具自主调用，最多 5 轮迭代推理
@@ -32,7 +32,7 @@ LawMind 是一款面向中国法律垂直场景的智能问答平台，基于 **
 | **向量存储** | Redis Stack 7.4（RediSearch + FLOAT32 向量索引） |
 | **数据库** | MySQL 8.0 + MyBatis（纯 XML 映射） |
 | **前端** | Vue 3 + Vite + Element Plus + Pinia + SSE 流式响应 |
-| **安全与运维** | Spring AOP（限流 / 审计）、JWT 认证、Sentinel 熔断降级、Nginx |
+| **安全与运维** | Spring AOP（审计 / 日志）、JWT 认证 |
 
 ---
 
@@ -186,15 +186,13 @@ LawMind/
 │   ├── config/             # Spring 配置
 │   ├── controller/         # REST 控制器
 │   ├── service/            # 业务服务层
-│   │   └── impl/           #   含 RAG 管道、混合搜索、合同审查等
+│   │   └── impl/           #   含 RAG 管道、混合搜索等
 │   ├── entity/             # 数据库实体
 │   └── common/             # 通用工具
-├── skills/                 # 法律技能定义（合同审查）
-│   └── contract-review/    #   检查清单 + 不公平条款模式
 ├── frontend/               # Vue 3 前端
 │   └── src/
 │       ├── components/     #   通用组件（Markdown渲染、侧边栏等）
-│       ├── views/          #   页面（咨询、知识库、合同审查等）
+│       ├── views/          #   页面（咨询、知识库等）
 │       ├── stores/         #   Pinia 状态管理
 │       └── utils/          #   SSE 流式解析、Markdown 渲染
 ├── docs/                   # 技术文档（架构设计/算法说明/评估体系）

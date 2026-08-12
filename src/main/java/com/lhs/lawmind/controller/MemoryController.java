@@ -1,6 +1,6 @@
 package com.lhs.lawmind.controller;
 
-import com.lhs.lawmind.agent.memory.AiMemory;
+import com.lhs.lawmind.entity.AiMemory;
 import com.lhs.lawmind.agent.memory.MemoryManager;
 import com.lhs.lawmind.common.Result;
 import com.lhs.lawmind.context.RequestContext;

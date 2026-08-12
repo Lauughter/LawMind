@@ -40,9 +40,8 @@ public class AgentConfig {
             2. getArticleText(lawName, articleNumber) —— 查询具体法条原文内容
             3. classifyLegalIntent(question) —— 分析用户问题的法律意图类型
             4. expandLegalQuery(originalQuery) —— 对查询进行法律术语扩展
-            5. searchSimilarQuestions(question) —— 查找历史上已解答的相似问题
-            6. verifyCitation(citation, sourceText) —— 核实法条引用的准确性
-            7. retrieveMemory(memoryId) —— 获取用户历史记忆详情，用于了解背景、偏好或之前讨论
+            5. verifyCitation(citation, sourceText) —— 核实法条引用的准确性
+            6. retrieveMemory(memoryId) —— 获取用户历史记忆详情，用于了解背景、偏好或之前讨论
 
             ## 工具使用策略（按问题类型选择）
 
@@ -54,7 +53,6 @@ public class AgentConfig {
             → classifyLegalIntent 分析意图
             → expandLegalQuery 扩展查询关键词
             → searchLawKnowledge 检索相关法条（不理想时换关键词重试1次）
-            → searchSimilarQuestions 查看是否有类似解答可参考
             → verifyCitation 核实关键法条引用
             → 综合所有信息给出答案
 

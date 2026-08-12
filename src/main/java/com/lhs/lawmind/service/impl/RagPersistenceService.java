@@ -5,11 +5,8 @@ import com.lhs.lawmind.entity.LawKnowledge;
 import com.lhs.lawmind.service.AiChatService;
 import com.lhs.lawmind.service.AutoLearnService;
 import com.lhs.lawmind.service.LawKnowledgeService;
-import com.lhs.lawmind.service.SimilarQuestionService;
 import com.lhs.lawmind.utils.JsonUtil;
-import com.lhs.lawmind.utils.LawKnowledgeRedisUtil;
-import com.lhs.lawmind.utils.TextPreprocessUtil;
-import com.lhs.lawmind.utils.VisitStatsUtil;
+import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
@@ -36,23 +33,17 @@ public class RagPersistenceService {
     private static final double COST_PER_1K_OUTPUT_TOKENS = 0.002;
 
     private final AiChatService aiChatService;
-    private final VisitStatsUtil visitStatsUtil;
     private final AutoLearnService autoLearnService;
-    private final SimilarQuestionService similarQuestionService;
     private final LawKnowledgeRedisUtil lawKnowledgeRedisUtil;
     private final LawKnowledgeService lawKnowledgeService;
 
     public RagPersistenceService(
             @Lazy AiChatService aiChatService,
-            VisitStatsUtil visitStatsUtil,
             @Lazy AutoLearnService autoLearnService,
-            SimilarQuestionService similarQuestionService,
             LawKnowledgeRedisUtil lawKnowledgeRedisUtil,
             LawKnowledgeService lawKnowledgeService) {
         this.aiChatService = aiChatService;
-        this.visitStatsUtil = visitStatsUtil;
         this.autoLearnService = autoLearnService;
-        this.similarQuestionService = similarQuestionService;
         this.lawKnowledgeRedisUtil = lawKnowledgeRedisUtil;
         this.lawKnowledgeService = lawKnowledgeService;
     }
@@ -86,9 +77,6 @@ public class RagPersistenceService {
             aiChatService.insert(aiChat);
             log.info("[聊天记录] 保存成功: chatId={}, source={}", aiChat.getId(), source);
 
-            TextPreprocessUtil.PreprocessResult preprocessResult = TextPreprocessUtil.preprocessAndGenerateMD5(question);
-            visitStatsUtil.incrementVisitCount(preprocessResult.getMd5());
-
             if ("llm_direct".equals(source)) {
                 log.info("大模型直接回答，调用自动学习服务提取法律知识: chatId={}", aiChat.getId());
                 autoLearnService.processLLMAnswerAndExtractKnowledge(aiChat);
@@ -99,78 +87,6 @@ public class RagPersistenceService {
         } catch (Exception e) {
             log.error("[聊天记录] 保存失败: source={}, error={}", source, e.getMessage(), e);
             return null;
-        }
-    }
-
-    @Async("taskExecutor")
-    public void asyncUpdateSimilarQuestion(String question, String answer, String knowledgeIds, float[] questionVector) {
-        try {
-            similarQuestionService.asyncSaveSimilarQuestion(question, answer, knowledgeIds);
-            log.info("异步更新相似问题库完成: question={}, knowledgeIds={}",
-                question.substring(0, Math.min(50, question.length())), knowledgeIds);
-        } catch (Exception e) {
-            log.error("异步更新相似问题库失败: {}", e.getMessage(), e);
-        }
-    }
-
-    @Async("taskExecutor")
-    public void asyncInsertQuestionAndKnowledge(Long userId, String question, String answer,
-                                                 String knowledgeIds, Long conversationId) {
-        try {
-            if (userId == null || question == null || answer == null || knowledgeIds == null || knowledgeIds.isEmpty()) {
-                log.warn("参数为空，跳过插入");
-                return;
-            }
-
-            log.info("开始异步插入问题和法律知识到聊天记录: userId={}, knowledgeIds={}", userId, knowledgeIds);
-
-            String[] idArray = knowledgeIds.split(",");
-            List<LawKnowledge> relatedKnowledge = new ArrayList<>();
-
-            for (String idStr : idArray) {
-                try {
-                    Long knowledgeId = Long.parseLong(idStr.trim());
-                    LawKnowledgeRedisUtil.LawKnowledge redisKnowledge = lawKnowledgeRedisUtil.getLawKnowledge(knowledgeId);
-                    if (redisKnowledge != null) {
-                        LawKnowledge knowledge = new LawKnowledge();
-                        knowledge.setId(redisKnowledge.getId());
-                        knowledge.setTitle(redisKnowledge.getTitle());
-                        knowledge.setLawType(redisKnowledge.getLawType());
-                        knowledge.setContent(redisKnowledge.getContent());
-                        relatedKnowledge.add(knowledge);
-                        log.info("从Redis获取法律知识成功: id={}", knowledgeId);
-                    } else {
-                        LawKnowledge knowledge = lawKnowledgeService.getById(knowledgeId);
-                        if (knowledge != null) {
-                            relatedKnowledge.add(knowledge);
-                            log.info("从MySQL获取法律知识成功: id={}", knowledgeId);
-                        } else {
-                            log.warn("未找到法律知识: id={}", knowledgeId);
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    log.warn("无效的知识点ID: {}", idStr);
-                }
-            }
-
-            String knowledgeMatch = JsonUtil.buildKnowledgeMatchJson(relatedKnowledge);
-
-            AiChat aiChat = new AiChat();
-            aiChat.setUserId(userId);
-            aiChat.setConversationId(conversationId);
-            aiChat.setUserQuestion(question);
-            aiChat.setAiAnswer(answer);
-            aiChat.setKnowledgeMatch(knowledgeMatch);
-            aiChat.setCreateTime(new Date());
-            aiChatService.insert(aiChat);
-
-            log.info("异步插入问题和法律知识到聊天记录完成: chatId={}, 知识数量={}", aiChat.getId(), relatedKnowledge.size());
-
-            TextPreprocessUtil.PreprocessResult preprocessResult = TextPreprocessUtil.preprocessAndGenerateMD5(question);
-            visitStatsUtil.incrementVisitCount(preprocessResult.getMd5());
-
-        } catch (Exception e) {
-            log.error("异步插入问题和法律知识到聊天记录失败: {}", e.getMessage(), e);
         }
     }
 

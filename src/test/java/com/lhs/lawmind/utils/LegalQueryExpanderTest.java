@@ -1,5 +1,6 @@
 package com.lhs.lawmind.utils;
 
+import com.lhs.lawmind.utils.query.LegalQueryExpander;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

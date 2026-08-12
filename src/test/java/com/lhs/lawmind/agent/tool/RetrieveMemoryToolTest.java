@@ -1,6 +1,6 @@
 package com.lhs.lawmind.agent.tool;
 
-import com.lhs.lawmind.agent.memory.AiMemory;
+import com.lhs.lawmind.entity.AiMemory;
 import com.lhs.lawmind.agent.memory.MemoryRetriever;
 import com.lhs.lawmind.agent.memory.MemoryType;
 import org.junit.jupiter.api.BeforeEach;

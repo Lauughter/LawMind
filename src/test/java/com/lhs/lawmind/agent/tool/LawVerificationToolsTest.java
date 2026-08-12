@@ -1,88 +1,20 @@
 package com.lhs.lawmind.agent.tool;
 
-import com.lhs.lawmind.entity.SimilarQuestion;
-import com.lhs.lawmind.service.SimilarQuestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LawVerificationToolsTest {
-
-    @Mock
-    private SimilarQuestionService similarQuestionService;
 
     private LawVerificationTools lawVerificationTools;
 
     @BeforeEach
     void setUp() {
-        lawVerificationTools = new LawVerificationTools(similarQuestionService);
-    }
-
-    @Test
-    void searchSimilarQuestions_shouldReturnMatch_whenFound() {
-        SimilarQuestion sq = new SimilarQuestion();
-        sq.setQuestion("被公司开除能赔多少钱");
-        sq.setAnswer("根据《劳动合同法》第47条...");
-        sq.setVisitCount(15);
-        sq.setKnowledgeIds("1,2,3");
-
-        when(similarQuestionService.searchSimilarQuestion("被公司开除怎么办"))
-                .thenReturn(sq);
-
-        String result = lawVerificationTools.searchSimilarQuestions("被公司开除怎么办");
-
-        assertThat(result).contains("[相似问题匹配]");
-        assertThat(result).contains("被公司开除能赔多少钱");
-        assertThat(result).contains("劳动合同法");
-        assertThat(result).contains("15");
-        assertThat(result).contains("1,2,3");
-        assertThat(result).contains("核实");
-        assertThat(result).doesNotContain("[Tool 错误]");
-    }
-
-    @Test
-    void searchSimilarQuestions_shouldReturnNotFound_whenNoMatch() {
-        when(similarQuestionService.searchSimilarQuestion(anyString()))
-                .thenReturn(null);
-
-        String result = lawVerificationTools.searchSimilarQuestions("新法律问题");
-
-        assertThat(result).contains("[相似问题]");
-        assertThat(result).contains("未找到");
-        assertThat(result).doesNotContain("[Tool 错误]");
-    }
-
-    @Test
-    void searchSimilarQuestions_shouldHandleNullVisitCount() {
-        SimilarQuestion sq = new SimilarQuestion();
-        sq.setQuestion("测试问题");
-        sq.setAnswer("测试回答");
-        sq.setVisitCount(null);
-
-        when(similarQuestionService.searchSimilarQuestion(anyString()))
-                .thenReturn(sq);
-
-        String result = lawVerificationTools.searchSimilarQuestions("测试问题");
-
-        assertThat(result).contains("访问次数：0");
-    }
-
-    @Test
-    void searchSimilarQuestions_shouldReturnError_whenServiceFails() {
-        when(similarQuestionService.searchSimilarQuestion(anyString()))
-                .thenThrow(new RuntimeException("Redis连接失败"));
-
-        String result = lawVerificationTools.searchSimilarQuestions("测试");
-
-        assertThat(result).startsWith("[Tool 错误]");
-        assertThat(result).contains("相似问题检索失败");
+        lawVerificationTools = new LawVerificationTools();
     }
 
     @Test

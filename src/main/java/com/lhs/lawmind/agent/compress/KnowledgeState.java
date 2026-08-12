@@ -16,18 +16,34 @@ import java.util.regex.Pattern;
  */
 public class KnowledgeState {
 
+    // 法律名称匹配模式，支持《民法典》《劳动合同法》等格式
     private static final Pattern LAW_NAME_PATTERN = Pattern.compile("《(.+?)》");
+
+    // 文章号匹配模式，支持条款和款项的提取
     private static final Pattern ARTICLE_NUM_PATTERN = Pattern.compile(
             "第([一二三四五六七八九十百千]+)条(?:第([一二三四五六七八九十百千]+)款)?");
+
+    // 金额匹配模式，支持元和万元单位
     private static final Pattern AMOUNT_PATTERN = Pattern.compile(
             "([\\d,]+\\.?\\d*)\\s*([元万元])");
+
+    // 时效匹配模式，捕获数字和单位（年、月、日）以及相关法律程序关键词
     private static final Pattern DEADLINE_PATTERN = Pattern.compile(
             "(\\d+)\\s*([年个月日]).*?(?:时效|仲裁|诉讼|申请|起诉)");
 
+    // 相关法条列表
     private final List<ArticleEntry> articles = new ArrayList<>();
+
+    // 金额计算
     private final List<CalcEntry> calculations = new ArrayList<>();
+
+    // 时效提醒列表
     private final List<String> reminders = new ArrayList<>();
+
+    // 参考案例列表
     private final List<CaseEntry> cases = new ArrayList<>();
+
+    // 最大存储的法条数量，超过时按引用频次淘汰
     private final int maxArticles;
 
     public KnowledgeState(int maxArticles) {
@@ -208,6 +224,7 @@ public class KnowledgeState {
         return 0;
     }
 
+    // 根据法律名称和条款号查找已存储的法条。
     private ArticleEntry findArticle(String lawName, String articleNumber) {
         for (ArticleEntry entry : articles) {
             KnowledgeAtom.ArticleAtom a = entry.atom;

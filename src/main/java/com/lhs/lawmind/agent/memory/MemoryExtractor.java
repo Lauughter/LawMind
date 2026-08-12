@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.lhs.lawmind.entity.AiMemory;
 
 /**
  * LLM 驱动的记忆提取器 —— 从完整会话中提取四类型记忆，含冲突检测。
@@ -37,7 +38,6 @@ public class MemoryExtractor {
             - 用户对某类回答方式的偏好声明
 
             ### PROJECT（事项/案件）
-            - 本次合同审查的对象和核心发现
             - 本次法律咨询的核心问题和结论
             - 格式：标题(20字内) + 摘要(200字内) + 重要性(1-10)
 

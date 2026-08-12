@@ -6,8 +6,8 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.lhs.lawmind.utils.IndexStatusCache;
-import com.lhs.lawmind.utils.RedisIndexUtil;
+import com.lhs.lawmind.utils.redis.IndexStatusCache;
+import com.lhs.lawmind.utils.redis.RedisIndexUtil;
 
 import java.util.Optional;
 
@@ -44,7 +44,6 @@ public class RedisIndexInitializer implements CommandLineRunner {
 
         try {
             createAndCacheIndex(ragConfig.getLawVectorIndex(), this::createLawVectorIndexSchema);
-            createAndCacheIndex(ragConfig.getSimilarQuestionIndex(), this::createSimilarQuestionIndexSchema);
             log.info("索引状态缓存初始化完成: {}", redisIndexUtil.getCacheStats());
             log.info("=== Redis向量索引和状态缓存初始化完成 ===");
         } catch (Exception e) {
@@ -120,57 +119,6 @@ public class RedisIndexInitializer implements CommandLineRunner {
                     log.info("法律知识库向量索引已存在: {}", indexName);
                 } else {
                     log.error("创建法律知识库向量索引失败: {}", e.getMessage(), e);
-                    throw e;
-                }
-            }
-            return null;
-        });
-    }
-
-    /**
-     * 创建相似问题库向量索引的Schema
-     */
-    private void createSimilarQuestionIndexSchema() {
-        String indexName = ragConfig.getSimilarQuestionIndex();
-        String keyPrefix = ragConfig.getSimilarQuestionKeyPrefix();
-
-        redisTemplate.execute((RedisCallback<Void>) connection -> {
-            try {
-                Object response = connection.execute("ft.create",
-                    indexName.getBytes(),
-                    "ON".getBytes(),
-                    "HASH".getBytes(),
-                    "PREFIX".getBytes(),
-                    "1".getBytes(),
-                    keyPrefix.getBytes(),
-                    "SCHEMA".getBytes(),
-                    "question".getBytes(),
-                    "TEXT".getBytes(),
-                    "SORTABLE".getBytes(),
-                    "answer".getBytes(),
-                    "TEXT".getBytes(),
-                    "NOINDEX".getBytes(),
-                    "knowledgeIds".getBytes(),
-                    "TAG".getBytes(),
-                    "SEPARATOR".getBytes(),
-                    ",".getBytes(),
-                    "vector".getBytes(),
-                    "VECTOR".getBytes(),
-                    "FLAT".getBytes(),
-                    "6".getBytes(),
-                    "TYPE".getBytes(),
-                    "FLOAT32".getBytes(),
-                    "DIM".getBytes(),
-                    "1536".getBytes(),
-                    "DISTANCE_METRIC".getBytes(),
-                    "COSINE".getBytes());
-
-                log.info("创建相似问题库向量索引成功: {}, 响应: {}", indexName, response);
-            } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("Index already exists")) {
-                    log.info("相似问题库向量索引已存在: {}", indexName);
-                } else {
-                    log.error("创建相似问题库向量索引失败: {}", e.getMessage(), e);
                     throw e;
                 }
             }

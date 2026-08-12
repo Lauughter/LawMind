@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import com.lhs.lawmind.entity.AiMemory;
 
 /**
  * 记忆系统统一入口 —— 检索注入 + 异步提取 + 用户管理。

@@ -30,8 +30,7 @@ public record IntentGateConfig(
             @DefaultValue List<String> caseSearchKeywords,
             @DefaultValue List<String> documentDraftingKeywords,
             @DefaultValue List<String> legalKnowledgeKeywords,
-            @DefaultValue List<String> contractReviewKeywords,
-            @DefaultValue("请将以下法律问题分类为以下类型之一（仅输出类型名称）：ARTICLE_LOOKUP（法条查询）、LEGAL_CONSULTATION（法律咨询）、CALCULATION（金额计算）、CASE_SEARCH（案例检索）、DOCUMENT_DRAFTING（文书起草）、LEGAL_KNOWLEDGE（法律知识问答）、CONTRACT_REVIEW（合同审查）。\\n问题：") String llmPrompt) {
+            @DefaultValue("请将以下法律问题分类为以下类型之一（仅输出类型名称）：ARTICLE_LOOKUP（法条查询）、LEGAL_CONSULTATION（法律咨询）、CALCULATION（金额计算）、CASE_SEARCH（案例检索）、DOCUMENT_DRAFTING（文书起草）、LEGAL_KNOWLEDGE（法律知识问答）。\\n问题：") String llmPrompt) {
     }
 
     public record ComplexityConfig(

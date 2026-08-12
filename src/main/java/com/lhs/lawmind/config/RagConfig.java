@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * RAG知识库检索配置类
  * 包含所有与RAG流程相关的配置参数，避免硬编码
- * 该类负责配置 RAG 知识库检索流程的参数，包括 Redis 索引、键前缀、相似度阈值、热点缓存、向量维度、检索数量等。
+ * 该类负责配置 RAG 知识库检索流程的参数，包括 Redis 索引、键前缀、相似度阈值、向量维度、检索数量等。
  * 它与 RAG 知识库检索服务类 RagService 交互，用于配置 RAG 知识库检索流程的参数。
  * 
  * */
@@ -17,45 +17,16 @@ public class RagConfig {
     @Value("${rag.redis.index.law-vector:idx:law_knowledge}")
     private String lawVectorIndex;
 
-    @Value("${rag.redis.index.similar-question:idx:similar_question}")
-    private String similarQuestionIndex;
-
     // ========== Redis键前缀配置 ==========
-    @Value("${rag.redis.key-prefix.hot-question:hot:question:}")
-    private String hotQuestionKeyPrefix;
-
     @Value("${rag.redis.key-prefix.law-vector:law:vector:}")
     private String lawVectorKeyPrefix;
 
-    @Value("${rag.redis.key-prefix.similar-question:similar:question:}")
-    private String similarQuestionKeyPrefix;
-
     // ========== 相似度阈值配置 ==========
-    @Value("${rag.threshold.similar-question:0.85}")
-    private double similarQuestionThreshold;
-
     @Value("${rag.threshold.law-knowledge:0.75}")
     private double lawKnowledgeThreshold;
 
     @Value("${rag.threshold.filter:0.70}")
     private double filterThreshold;
-
-    // ========== 热点缓存配置 ==========
-    @Value("${rag.hot-cache.initial-ttl-days:30}")
-    private int hotCacheInitialTtlDays;
-
-    @Value("${rag.hot-cache.eviction-days:7}")
-    private int hotCacheEvictionDays;
-
-    // ========== 热点阈值配置 ==========
-    @Value("${rag.hot-threshold.5-minutes:3}")
-    private int hotThreshold5Minutes;
-
-    @Value("${rag.hot-threshold.1-hour:10}")
-    private int hotThreshold1Hour;
-
-    @Value("${rag.hot-threshold.1-day:30}")
-    private int hotThreshold1Day;
 
     // ========== 向量维度配置 ==========
     @Value("${rag.vector.dimension:1536}")
@@ -122,24 +93,8 @@ public class RagConfig {
         return lawVectorIndex;
     }
 
-    public String getSimilarQuestionIndex() {
-        return similarQuestionIndex;
-    }
-
-    public String getHotQuestionKeyPrefix() {
-        return hotQuestionKeyPrefix;
-    }
-
     public String getLawVectorKeyPrefix() {
         return lawVectorKeyPrefix;
-    }
-
-    public String getSimilarQuestionKeyPrefix() {
-        return similarQuestionKeyPrefix;
-    }
-
-    public double getSimilarQuestionThreshold() {
-        return similarQuestionThreshold;
     }
 
     public double getLawKnowledgeThreshold() {
@@ -148,26 +103,6 @@ public class RagConfig {
 
     public double getFilterThreshold() {
         return filterThreshold;
-    }
-
-    public int getHotCacheInitialTtlDays() {
-        return hotCacheInitialTtlDays;
-    }
-
-    public int getHotCacheEvictionDays() {
-        return hotCacheEvictionDays;
-    }
-
-    public int getHotThreshold5Minutes() {
-        return hotThreshold5Minutes;
-    }
-
-    public int getHotThreshold1Hour() {
-        return hotThreshold1Hour;
-    }
-
-    public int getHotThreshold1Day() {
-        return hotThreshold1Day;
     }
 
     public int getVectorDimension() {

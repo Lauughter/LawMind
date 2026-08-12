@@ -13,7 +13,7 @@ import java.util.Optional;
  * 
  * 安全加固说明：
  * - 减少了拦截器的排除路径
- * - 核心业务接口（ai-chat、conversation、hot-question、law-file等）现在都需要JWT认证
+ * - 核心业务接口（ai-chat、conversation、law-file 等）现在都需要JWT认证
  * - 只有登录注册、健康检查等必要接口被排除
  * 
  * 拦截器顺序（重要！）：
@@ -53,8 +53,6 @@ public class WebConfig implements WebMvcConfigurer {
                             "/user/register",
                             "/user/refresh-token",
                             "/user/logout",
-                            // Sentinel 注解测试接口（开发调试用）
-                            "/sentinel-test/**",
                             // Actuator 健康检查（监控用）
                             "/actuator/**"
                     )

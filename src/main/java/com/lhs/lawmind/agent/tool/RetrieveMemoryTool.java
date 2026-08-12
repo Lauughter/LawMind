@@ -1,6 +1,6 @@
 package com.lhs.lawmind.agent.tool;
 
-import com.lhs.lawmind.agent.memory.AiMemory;
+import com.lhs.lawmind.entity.AiMemory;
 import com.lhs.lawmind.agent.memory.MemoryRetriever;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;

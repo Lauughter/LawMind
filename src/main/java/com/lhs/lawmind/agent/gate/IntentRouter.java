@@ -88,7 +88,6 @@ public class IntentRouter {
             case CASE_SEARCH -> 1200;
             case LEGAL_CONSULTATION -> 1500;
             case DOCUMENT_DRAFTING -> 2000;
-            case CONTRACT_REVIEW -> 3000;
         };
         double multiplier = switch (complexity) {
             case SIMPLE -> 0.6;

@@ -1,8 +1,8 @@
 package com.lhs.lawmind.controller;
 
 import com.lhs.lawmind.common.Result;
-import com.lhs.lawmind.utils.IndexStatusCache;
-import com.lhs.lawmind.utils.RedisIndexUtil;
+import com.lhs.lawmind.utils.redis.IndexStatusCache;
+import com.lhs.lawmind.utils.redis.RedisIndexUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

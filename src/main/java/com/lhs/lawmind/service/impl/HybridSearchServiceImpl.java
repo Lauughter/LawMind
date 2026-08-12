@@ -4,8 +4,8 @@ import com.lhs.lawmind.config.RagConfig;
 import com.lhs.lawmind.entity.LawKnowledge;
 import com.lhs.lawmind.mapper.LawKnowledgeMapper;
 import com.lhs.lawmind.service.HybridSearchService;
-import com.lhs.lawmind.utils.LawKnowledgeRedisUtil;
-import com.lhs.lawmind.utils.RedisVectorUtil;
+import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
+import com.lhs.lawmind.utils.redis.RedisVectorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

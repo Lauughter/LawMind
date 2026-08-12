@@ -1,7 +1,7 @@
 package com.lhs.lawmind.agent.gate;
 
 /**
- * 用户意图类型枚举（7 种）。
+ * 用户意图类型枚举（6 种）。
  */
 public enum IntentType {
 
@@ -21,8 +21,5 @@ public enum IntentType {
     DOCUMENT_DRAFTING,
 
     /** 法律知识问答 — 用户询问法律概念、制度、程序等一般性知识 */
-    LEGAL_KNOWLEDGE,
-
-    /** 合同审查 — 用户上传合同文件，由 Agent 分析条款合法性与公平性 */
-    CONTRACT_REVIEW
+    LEGAL_KNOWLEDGE
 }
