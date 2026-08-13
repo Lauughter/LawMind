@@ -1,5 +1,6 @@
 package com.lhs.lawmind.agent.gate;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,10 +22,12 @@ class IntentGateTest {
     @Mock
     private ChatLanguageModel chatLanguageModel;
 
+    private LLMInvoker llmInvoker;
     private IntentGate intentGate;
 
     @BeforeEach
     void setUp() {
+        llmInvoker = new LLMInvoker(Optional.of(chatLanguageModel), Optional.empty());
         var config = new IntentGateConfig(
                 true, // ruleOnly
                 new IntentGateConfig.DomainConfig(
@@ -72,8 +76,8 @@ class IntentGateTest {
                 )
         );
 
-        DomainGate domainGate = new DomainGate(config, chatLanguageModel);
-        IntentClassifierEnhanced classifier = new IntentClassifierEnhanced(config, chatLanguageModel);
+        DomainGate domainGate = new DomainGate(config, llmInvoker);
+        IntentClassifierEnhanced classifier = new IntentClassifierEnhanced(config, llmInvoker);
         ComplexityAssessor complexityAssessor = new ComplexityAssessor(config);
         IntentRouter router = new IntentRouter(config);
 

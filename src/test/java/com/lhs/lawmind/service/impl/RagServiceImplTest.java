@@ -4,6 +4,11 @@ import com.lhs.lawmind.agent.gate.IntentClassifierEnhanced;
 import com.lhs.lawmind.agent.gate.IntentType;
 import com.lhs.lawmind.config.RagConfig;
 import com.lhs.lawmind.dto.AIChatResponse;
+import com.lhs.lawmind.llm.LLMInvoker;
+import com.lhs.lawmind.rag.CitationVerifier;
+import com.lhs.lawmind.rag.QueryEnhancer;
+import com.lhs.lawmind.rag.RagPromptBuilder;
+import com.lhs.lawmind.rag.RagRetrievalService;
 import com.lhs.lawmind.entity.LawKnowledge;
 import com.lhs.lawmind.mapper.AiChatMapper;
 import com.lhs.lawmind.service.AiChatService;
@@ -59,29 +64,35 @@ class RagServiceImplTest {
     @Mock private RagPersistenceService ragPersistenceService;
     @Mock private RagMetricsService ragMetricsService;
 
+    private LLMInvoker llmInvoker;
     private RagServiceImpl ragService;
 
     @BeforeEach
     void setUp() {
+        llmInvoker = new LLMInvoker(Optional.of(chatLanguageModel), Optional.empty());
+        RagPromptBuilder promptBuilder = new RagPromptBuilder(ragConfig, aiChatMapper, sysConfigService);
+        RagRetrievalService retrievalService = new RagRetrievalService(
+                ragConfig, hybridSearchService, rerankService,
+                searchResultDiversifier, lawKnowledgeRedisUtil, lawKnowledgeService);
+        QueryEnhancer queryEnhancer = new QueryEnhancer(
+                llmInvoker, Optional.of(embeddingUtil), ragConfig, promptBuilder, chatLanguageModel);
+        CitationVerifier citationVerifier = new CitationVerifier(ragConfig);
         ragService = new RagServiceImpl(
                 Optional.of(chatLanguageModel),
                 Optional.empty(),
                 Optional.of(embeddingUtil),
-                lawKnowledgeRedisUtil,
                 ragConfig,
-                lawKnowledgeService,
                 aiChatService,
-                aiChatMapper,
-                autoLearnService,
-                hybridSearchService,
-                rerankService,
-                legalQueryExpander,
-                searchResultDiversifier,
                 intentClassifierEnhanced,
                 new LegalEntityExtractor(),
-                sysConfigService,
+                legalQueryExpander,
+                llmInvoker,
                 ragPersistenceService,
-                ragMetricsService
+                ragMetricsService,
+                promptBuilder,
+                retrievalService,
+                queryEnhancer,
+                citationVerifier
         );
     }
 
@@ -100,7 +111,7 @@ class RagServiceImplTest {
         mockFullPipeline();
         when(lawKnowledgeRedisUtil.searchLawKnowledge(any(), anyInt()))
                 .thenReturn(new ArrayList<>());
-        when(chatLanguageModel.generate(any(ChatMessage.class), any(ChatMessage.class)))
+        when(chatLanguageModel.generate(anyList()))
                 .thenReturn(Response.from(AiMessage.from("请咨询专业律师获取帮助。")));
 
         AIChatResponse result = ragService.processQuestion(1L, "离婚财产怎么分割？", null);
@@ -126,7 +137,7 @@ class RagServiceImplTest {
         when(ragConfig.getLawVectorKeyPrefix()).thenReturn("law:vector:");
         when(lawKnowledgeService.getById(1L)).thenReturn(knowledge);
 
-        when(chatLanguageModel.generate(any(ChatMessage.class), any(ChatMessage.class)))
+        when(chatLanguageModel.generate(anyList()))
                 .thenReturn(Response.from(AiMessage.from("根据劳动法，用人单位应当支付加班费。")));
 
         AIChatResponse result = ragService.processQuestion(1L, "加班不给加班费怎么办？", null);
@@ -141,7 +152,7 @@ class RagServiceImplTest {
         mockFullPipeline();
         when(lawKnowledgeRedisUtil.searchLawKnowledge(any(), anyInt()))
                 .thenReturn(new ArrayList<>());
-        when(chatLanguageModel.generate(any(ChatMessage.class), any(ChatMessage.class)))
+        when(chatLanguageModel.generate(anyList()))
                 .thenReturn(Response.from(AiMessage.from("请参考《劳动法》第三十九条。")));
 
         AIChatResponse result = ragService.processQuestion(1L,

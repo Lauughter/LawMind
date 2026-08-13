@@ -117,6 +117,17 @@
                     <span></span>
                   </div>
                   <div v-else>
+                    <div v-if="message.reasoning && message.reasoning.length" class="agent-reasoning">
+                      <div
+                        v-for="(step, rIndex) in message.reasoning"
+                        :key="rIndex"
+                        class="agent-reasoning-step"
+                      >
+                        <template v-if="step.type === 'thought'">💭 {{ step.text }}</template>
+                        <template v-else-if="step.type === 'tool_call'">🔧 {{ step.text }}</template>
+                        <template v-else-if="step.type === 'tool_result'">📄 {{ step.text }}</template>
+                      </div>
+                    </div>
                     <MarkdownContent :content="message.content" :streaming="message.streaming" />
                     <div v-if="message.relatedKnowledge && message.relatedKnowledge.length > 0" class="knowledge-section">
                       <h4 class="knowledge-section-title">📚 相关法条</h4>
@@ -512,6 +523,21 @@ async function sendMessage() {
         aiMessage.content += token;
         scrollToBottomIfNear();
       },
+      onThought: (thought) => {
+        aiMessage.reasoning = aiMessage.reasoning || [];
+        aiMessage.reasoning.push({ type: "thought", text: thought });
+        scrollToBottomIfNear();
+      },
+      onToolCall: (toolCall) => {
+        aiMessage.reasoning = aiMessage.reasoning || [];
+        aiMessage.reasoning.push({ type: "tool_call", text: toolCall });
+        scrollToBottomIfNear();
+      },
+      onToolResult: (result) => {
+        aiMessage.reasoning = aiMessage.reasoning || [];
+        aiMessage.reasoning.push({ type: "tool_result", text: result });
+        scrollToBottomIfNear();
+      },
       onDone: ({ conversationId, chatId }) => {
         aiMessage.streaming = false;
         aiMessage.chatId = chatId;
@@ -672,6 +698,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Agent 推理过程流式展示 */
+.agent-reasoning {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--el-color-primary);
+  background: var(--el-fill-color-light);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.8;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.agent-reasoning-step {
+  word-break: break-all;
+}
+
 /* 外层包裹容器：侧边栏 + 聊天区域 */
 .consultation-wrapper {
   width: 100%;

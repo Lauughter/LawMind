@@ -119,6 +119,8 @@ public class MetricsPersistenceScheduler {
             e.setKnowledgeHits(sourceDist.getOrDefault("law_knowledge", 0L));
             e.setLlmDirectCount(sourceDist.getOrDefault("llm_direct", 0L));
             e.setNonLegalCount(sourceDist.getOrDefault("non_legal_reject", 0L));
+            e.setGateRejectCount(sourceDist.getOrDefault("gate_reject", 0L));
+            e.setGateDegradedCount(sourceDist.getOrDefault("gate_degraded", 0L));
         }
 
         // 反馈原因

@@ -191,7 +191,7 @@ function handleReconnection({ retryCount, error, onError, data, onToken, onKnowl
  * @param {Function} options.onError 错误回调 (errorMessage: string)
  * @returns {Object} { abort } 返回中断控制器
  */
-export function streamAgentChat({ data, onToken, onDone, onError }) {
+export function streamAgentChat({ data, onToken, onDone, onError, onThought, onToolCall, onToolResult }) {
   const controller = new AbortController()
   const { signal } = controller
   let aborted = false
@@ -235,12 +235,12 @@ export function streamAgentChat({ data, onToken, onDone, onError }) {
 
         for (const part of parts) {
           if (!part.trim()) continue
-          processAgentSSEEvent(part, { onToken, onDone, onError })
+          processAgentSSEEvent(part, { onToken, onDone, onError, onThought, onToolCall, onToolResult })
         }
       }
 
       if (buffer.trim()) {
-        processAgentSSEEvent(buffer, { onToken, onDone, onError })
+        processAgentSSEEvent(buffer, { onToken, onDone, onError, onThought, onToolCall, onToolResult })
       }
     } catch (err) {
       if (err.name === 'AbortError' || aborted) {
@@ -286,6 +286,18 @@ function processAgentSSEEvent(raw, { onToken, onDone, onError }) {
       case 'message': {
         // Agent 模式逐字推送，data 就是字符本身
         onToken?.(eventData || '')
+        break
+      }
+      case 'agent_thought': {
+        onThought?.(eventData)
+        break
+      }
+      case 'agent_tool_call': {
+        onToolCall?.(eventData)
+        break
+      }
+      case 'agent_tool_result': {
+        onToolResult?.(eventData)
         break
       }
       case 'done': {

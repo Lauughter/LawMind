@@ -1,11 +1,9 @@
 package com.lhs.lawmind.evaluation;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import com.lhs.lawmind.utils.EmbeddingUtil;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -26,7 +24,7 @@ import java.util.Optional;
 @Slf4j
 public class AnswerRelevanceEvaluator {
 
-    private final ChatLanguageModel model;
+    private final LLMInvoker llmInvoker;
     private final EmbeddingUtil embeddingUtil;
 
     private static final String SYSTEM_PROMPT = """
@@ -36,8 +34,8 @@ public class AnswerRelevanceEvaluator {
             只输出问题列表，每行一个，以 "- " 开头。
             不要输出其他内容。""";
 
-    public AnswerRelevanceEvaluator(Optional<ChatLanguageModel> model, Optional<EmbeddingUtil> embeddingUtil) {
-        this.model = model.orElse(null);
+    public AnswerRelevanceEvaluator(LLMInvoker llmInvoker, Optional<EmbeddingUtil> embeddingUtil) {
+        this.llmInvoker = llmInvoker;
         this.embeddingUtil = embeddingUtil.orElse(null);
     }
 
@@ -48,7 +46,7 @@ public class AnswerRelevanceEvaluator {
      * @return 相关性得分 0.0-1.0
      */
     public double evaluate(String originalQuestion, String answer) {
-        if (model == null || embeddingUtil == null
+        if (!llmInvoker.isAvailable() || embeddingUtil == null
                 || originalQuestion == null || originalQuestion.isBlank()
                 || answer == null || answer.isBlank()) {
             return 0.0;
@@ -76,20 +74,19 @@ public class AnswerRelevanceEvaluator {
 
     private List<String> generateReverseQuestions(String answer) {
         List<String> questions = new ArrayList<>();
-        try {
-            Response<AiMessage> response = model.generate(
-                    SystemMessage.from(SYSTEM_PROMPT),
-                    UserMessage.from("回答：\n" + answer)
-            );
-            String text = response.content().text();
-            for (String line : text.split("\n")) {
-                String trimmed = line.trim();
-                if (trimmed.startsWith("- ")) {
-                    questions.add(trimmed.substring(2).trim());
-                }
+        LLMInvoker.LLMResult result = llmInvoker.invoke(List.of(
+                SystemMessage.from(SYSTEM_PROMPT),
+                UserMessage.from("回答：\n" + answer)));
+        if (!result.success()) {
+            log.warn("反向问题生成失败: {}", result.answer());
+            return questions;
+        }
+        String text = result.answer();
+        for (String line : text.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("- ")) {
+                questions.add(trimmed.substring(2).trim());
             }
-        } catch (Exception e) {
-            log.warn("反向问题生成失败: {}", e.getMessage());
         }
         return questions;
     }

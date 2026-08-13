@@ -97,3 +97,4 @@
 | rag-gap-analysis.md | 企业级 RAG 差距分析 | 📝 | —（历史，独立；优化项已并入 01-architecture 🚧） |
 | project-tech-details.md | 项目技术详解 | 📝 | —（历史，内容已分解进 01-architecture） |
 | resume-copy.md | 个人简历文案 | 📝 | —（个人，可删除） |
+| agent-optimization-plan.md | Agent 子系统优化方案 | 🚧 | agent-orchestration.md、rag-retrieval.md、observability.md |

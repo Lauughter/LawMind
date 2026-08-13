@@ -1,10 +1,8 @@
 package com.lhs.lawmind.agent.compress;
 
-import dev.langchain4j.data.message.AiMessage;
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -23,14 +21,14 @@ public class SummarizingCompressor {
             输出要求：每条信息一行，不改写法条原文措辞。总字数 ≤ 原文40%。
             """;
 
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
     private final TokenEstimator tokenEstimator;
     private final double minSavingsRatio;
 
-    public SummarizingCompressor(ChatLanguageModel chatLanguageModel,
+    public SummarizingCompressor(LLMInvoker llmInvoker,
                                   TokenEstimator tokenEstimator,
                                   double minSavingsRatio) {
-        this.chatLanguageModel = chatLanguageModel;
+        this.llmInvoker = llmInvoker;
         this.tokenEstimator = tokenEstimator;
         this.minSavingsRatio = minSavingsRatio;
     }
@@ -93,10 +91,10 @@ public class SummarizingCompressor {
     }
 
     private String callLLM(String rawResult) {
-        Response<AiMessage> response = chatLanguageModel.generate(List.of(
+        LLMInvoker.LLMResult result = llmInvoker.invoke(List.of(
                 SystemMessage.from(COMPRESSION_PROMPT),
                 UserMessage.from(rawResult)
         ));
-        return response.content().text();
+        return result.success() ? result.answer() : rawResult;
     }
 }

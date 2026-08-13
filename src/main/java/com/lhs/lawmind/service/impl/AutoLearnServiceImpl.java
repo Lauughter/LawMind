@@ -3,11 +3,12 @@ package com.lhs.lawmind.service.impl;
 import com.lhs.lawmind.entity.AiChat;
 import com.lhs.lawmind.entity.LawKnowledge;
 import com.lhs.lawmind.entity.LawVectorTask;
+import com.lhs.lawmind.llm.LLMInvoker;
 import com.lhs.lawmind.service.*;
 import com.lhs.lawmind.utils.EmbeddingUtil;
 import com.lhs.lawmind.utils.JsonUtil;
 import com.lhs.lawmind.utils.redis.LawKnowledgeRedisUtil;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.data.message.UserMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @Service
 public class AutoLearnServiceImpl implements AutoLearnService {
 
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
 
     private final LawKnowledgeService lawKnowledgeService;
 
@@ -39,13 +40,13 @@ public class AutoLearnServiceImpl implements AutoLearnService {
 
     private final LawKnowledgeRedisUtil lawKnowledgeRedisUtil;
 
-    public AutoLearnServiceImpl(Optional<ChatLanguageModel> chatLanguageModel,
+    public AutoLearnServiceImpl(LLMInvoker llmInvoker,
                                 LawKnowledgeService lawKnowledgeService,
                                 @Lazy AiChatService aiChatService,
                                 LawVectorTaskService lawVectorTaskService,
                                 Optional<EmbeddingUtil> embeddingUtil,
                                 LawKnowledgeRedisUtil lawKnowledgeRedisUtil) {
-        this.chatLanguageModel = chatLanguageModel.orElse(null);
+        this.llmInvoker = llmInvoker;
         this.lawKnowledgeService = lawKnowledgeService;
         this.aiChatService = aiChatService;
         this.lawVectorTaskService = lawVectorTaskService;
@@ -248,28 +249,26 @@ public class AutoLearnServiceImpl implements AutoLearnService {
      */
     @Override
     public String extractLegalKnowledgeFromAnswer(String answer) {
-        if (chatLanguageModel == null) {
-            log.warn("ChatLanguageModel未初始化，无法提取法律知识");
+        if (!llmInvoker.isAvailable()) {
+            log.warn("LLM 未初始化，无法提取法律知识");
             return "[]";
         }
 
-        try {
-            String prompt = "你是一个专业的法律知识提取助手，请从以下AI回答中提取出涉及到的法律知识，包括法律的类型、标题和内容。\n\n"
-                    + "AI回答：" + answer + "\n\n"
-                    + "提取要求：\n"
-                    + "1. 只提取与法律相关的内容\n"
-                    + "2. 每个法律知识需要包含：lawType（法律类型）、title（法律标题）、content（法律内容）\n"
-                    + "3. 输出格式为JSON数组，例如：[{\"lawType\":\"劳动合同法\",\"title\":\"劳动合同的解除\",\"content\":\"用人单位与劳动者协商一致，可以解除劳动合同\"}]\n"
-                    + "4. 如果没有提取到法律知识，输出空数组 []\n";
+        String prompt = "你是一个专业的法律知识提取助手，请从以下AI回答中提取出涉及到的法律知识，包括法律的类型、标题和内容。\n\n"
+                + "AI回答：" + answer + "\n\n"
+                + "提取要求：\n"
+                + "1. 只提取与法律相关的内容\n"
+                + "2. 每个法律知识需要包含：lawType（法律类型）、title（法律标题）、content（法律内容）\n"
+                + "3. 输出格式为JSON数组，例如：[{\"lawType\":\"劳动合同法\",\"title\":\"劳动合同的解除\",\"content\":\"用人单位与劳动者协商一致，可以解除劳动合同\"}]\n"
+                + "4. 如果没有提取到法律知识，输出空数组 []\n";
 
-            String result = chatLanguageModel.generate(prompt);
-            log.info("提取法律知识成功");
-            return result;
-
-        } catch (Exception e) {
-            log.error("提取法律知识失败: error={}", e.getMessage(), e);
+        LLMInvoker.LLMResult result = llmInvoker.invoke(List.of(UserMessage.from(prompt)));
+        if (!result.success()) {
+            log.warn("提取法律知识失败: {}", result.answer());
             return "[]";
         }
+        log.info("提取法律知识成功");
+        return result.answer();
     }
 
     /**

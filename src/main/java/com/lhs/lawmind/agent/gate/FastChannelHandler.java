@@ -1,93 +1,116 @@
 package com.lhs.lawmind.agent.gate;
 
 import com.lhs.lawmind.entity.LawKnowledge;
+import com.lhs.lawmind.llm.LLMInvoker;
+import com.lhs.lawmind.rag.RagPromptBuilder;
+import com.lhs.lawmind.rag.RagRetrievalService;
 import com.lhs.lawmind.service.LawKnowledgeService;
-import dev.langchain4j.data.message.SystemMessage;
+import com.lhs.lawmind.utils.EmbeddingUtil;
+import com.lhs.lawmind.utils.query.LegalQueryExpander;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * 快速通道处理器。
  *
- * <p>用于简单问题的快速处理：关键词检索 + 单次 LLM 生成，不走 Agent 循环。
- * 适用于法条查询、法律知识问答等低复杂度场景。</p>
+ * <p>用于简单问题的快速处理：复用 RAG 检索管道（RagRetrievalService）与 prompt 构建
+ * （RagPromptBuilder），单次 LLM 生成，不走 Agent 循环。</p>
+ *
+ * <p>P1-7：检索与系统提示词复用 RAG 管道，消除与 RagServiceImpl 的平行实现。</p>
  */
 @Slf4j
 @Component
 public class FastChannelHandler {
 
+    private final LLMInvoker llmInvoker;
+    private final RagPromptBuilder promptBuilder;
+    private final RagRetrievalService retrievalService;
+    private final EmbeddingUtil embeddingUtil;
+    private final LegalQueryExpander legalQueryExpander;
     private final LawKnowledgeService lawKnowledgeService;
-    private final ChatLanguageModel chatLanguageModel;
 
-    private static final String FAST_SYSTEM_PROMPT = """
-            你是一位专业的中国法律智能助手，名为 LawMind。
-
-            ## 回答要求
-            1. 基于提供的法律知识库内容回答用户问题
-            2. 如果知识库中有相关法条，必须引用法条原文（注明《法律名称》第X条）
-            3. 如果知识库信息不足以回答，明确告知用户，不要编造
-            4. 回答结构：问题分析 → 法律依据 → 具体解答 → 注意事项 → 免责声明
-            5. 涉及金额计算时逐步列出公式和计算过程
-
-            ## 免责声明
-            以上内容仅供参考，不构成法律意见。具体案件请咨询专业律师。
-            """;
-
-    public FastChannelHandler(LawKnowledgeService lawKnowledgeService,
-                               ChatLanguageModel chatLanguageModel) {
+    public FastChannelHandler(LLMInvoker llmInvoker,
+                              RagPromptBuilder promptBuilder,
+                              RagRetrievalService retrievalService,
+                              Optional<EmbeddingUtil> embeddingUtil,
+                              LegalQueryExpander legalQueryExpander,
+                              LawKnowledgeService lawKnowledgeService) {
+        this.llmInvoker = llmInvoker;
+        this.promptBuilder = promptBuilder;
+        this.retrievalService = retrievalService;
+        this.embeddingUtil = embeddingUtil.orElse(null);
+        this.legalQueryExpander = legalQueryExpander;
         this.lawKnowledgeService = lawKnowledgeService;
-        this.chatLanguageModel = chatLanguageModel;
     }
 
     /**
      * 快速处理法律问题。
      *
-     * @param question 用户问题
+     * @param question   用户问题
      * @param intentType 意图类型（用于调整检索策略）
      * @return AI 生成的回答文本
      */
     public String handle(String question, IntentType intentType) {
         long startTime = System.currentTimeMillis();
+        int topK = topKFor(intentType);
 
-        // 1. 关键词检索
-        int topK = switch (intentType) {
-            case ARTICLE_LOOKUP -> 10;
-            case CASE_SEARCH -> 8;
-            default -> 5;
-        };
-        List<LawKnowledge> knowledgeList = lawKnowledgeService.search(question, 1, topK);
+        // 1. 查询扩展 + 向量化 + 混合检索（复用 RAG 检索管道）
+        String expandedQuery = legalQueryExpander.expandQuery(question);
+        float[] vector = embed(expandedQuery);
+        List<LawKnowledge> knowledgeList;
+        if (vector != null && vector.length > 0) {
+            knowledgeList = retrievalService.searchLawKnowledgeFiltered(vector, expandedQuery, null, topK);
+        } else {
+            // 向量不可用时回退关键词检索
+            knowledgeList = lawKnowledgeService.search(question, 1, topK);
+        }
 
         log.info("[FastChannel] 检索完成: results={}, elapsed={}ms",
                 knowledgeList.size(), System.currentTimeMillis() - startTime);
 
-        // 2. 构建检索上下文
+        // 2. 构建消息（系统提示词复用 RAG，策略提示保留 Fast 定制）
         String knowledgeContext = buildKnowledgeContext(knowledgeList);
-
-        // 3. 构建消息
         var messages = List.of(
-                SystemMessage.from(FAST_SYSTEM_PROMPT),
+                promptBuilder.buildSystemPrompt(),
                 UserMessage.from(buildUserPrompt(question, knowledgeContext, intentType)));
 
-        // 4. 单次 LLM 生成
+        // 3. 单次 LLM 生成
+        LLMInvoker.LLMResult result = llmInvoker.invoke(messages);
+        if (!result.success()) {
+            log.error("[FastChannel] LLM 生成失败: {}", result.answer());
+            return "抱歉，回答生成失败：" + result.answer();
+        }
+
+        String answer = result.answer();
+        long elapsed = System.currentTimeMillis() - startTime;
+        log.info("[FastChannel] 回答生成完成: answerLen={}, elapsed={}ms",
+                answer != null ? answer.length() : 0, elapsed);
+
+        return answer != null && !answer.isBlank() ? answer : "抱歉，生成回答时出现问题，请稍后重试。";
+    }
+
+    private int topKFor(IntentType intentType) {
+        return switch (intentType) {
+            case ARTICLE_LOOKUP -> 10;
+            case CASE_SEARCH -> 8;
+            default -> 5;
+        };
+    }
+
+    private float[] embed(String expandedQuery) {
+        if (embeddingUtil == null) {
+            return null;
+        }
         try {
-            Response<dev.langchain4j.data.message.AiMessage> response =
-                    chatLanguageModel.generate(messages);
-            String answer = response.content().text();
-
-            long elapsed = System.currentTimeMillis() - startTime;
-            log.info("[FastChannel] 回答生成完成: answerLen={}, elapsed={}ms",
-                    answer != null ? answer.length() : 0, elapsed);
-
-            return answer != null ? answer : "抱歉，生成回答时出现问题，请稍后重试。";
+            return embeddingUtil.embed(expandedQuery);
         } catch (Exception e) {
-            log.error("[FastChannel] LLM 生成失败: error={}", e.getMessage(), e);
-            return "抱歉，回答生成失败：" + e.getMessage();
+            log.warn("[FastChannel] 向量化失败，回退关键词检索: {}", e.getMessage());
+            return null;
         }
     }
 

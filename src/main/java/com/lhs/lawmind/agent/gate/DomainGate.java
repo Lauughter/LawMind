@@ -1,9 +1,8 @@
 package com.lhs.lawmind.agent.gate;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,7 @@ import java.util.regex.Pattern;
 public class DomainGate {
 
     private final IntentGateConfig config;
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
 
     /** 书名号模式：匹配《XXX》形式的法条引用 */
     private static final Pattern BOOK_TITLE_PATTERN = Pattern.compile("《.+?》");
@@ -42,9 +41,9 @@ public class DomainGate {
     private static final List<String> SENSITIVE_KEYWORDS = List.of(
             "色情", "暴力", "政治敏感", "赌博", "毒品", "翻墙", "VPN推荐");
 
-    public DomainGate(IntentGateConfig config, ChatLanguageModel chatLanguageModel) {
+    public DomainGate(IntentGateConfig config, LLMInvoker llmInvoker) {
         this.config = config;
-        this.chatLanguageModel = chatLanguageModel;
+        this.llmInvoker = llmInvoker;
     }
 
     /**
@@ -127,26 +126,24 @@ public class DomainGate {
      * LLM 兜底判断（仅对模糊边界问题调用）。
      */
     private DomainVerdict llmJudge(String question) {
-        try {
-            String prompt = config.domain().llmPrompt() + question;
-            var messages = List.of(
-                    SystemMessage.from("你是一个法律领域识别助手。仅输出[是]或[否]，不要输出其他任何内容。"),
-                    UserMessage.from(prompt));
+        String prompt = config.domain().llmPrompt() + question;
+        var messages = List.of(
+                SystemMessage.from("你是一个法律领域识别助手。仅输出[是]或[否]，不要输出其他任何内容。"),
+                UserMessage.from(prompt));
 
-            Response<dev.langchain4j.data.message.AiMessage> response =
-                    chatLanguageModel.generate(messages);
-            String answer = response.content().text().trim();
-
-            log.info("[DomainGate] LLM 兜底判断结果: answer={}", answer);
-
-            if (answer.contains("是")) {
-                return DomainVerdict.legal(0.7, "LLM 判断为法律领域");
-            }
-            return DomainVerdict.nonLegal(0.7, "LLM 判断为非法律领域", "non_legal");
-        } catch (Exception e) {
-            log.error("[DomainGate] LLM 兜底判断失败，默认通过: error={}", e.getMessage());
+        LLMInvoker.LLMResult result = llmInvoker.invoke(messages);
+        if (!result.success()) {
             // 降级策略：LLM 判断失败时默认通过（宁可错放，不可错拦）
+            log.warn("[DomainGate] LLM 兜底调用失败，默认通过: {}", result.answer());
             return DomainVerdict.legal(0.5, "LLM 判断失败，默认通过");
         }
+
+        String answer = result.answer().trim();
+        log.info("[DomainGate] LLM 兜底判断结果: answer={}", answer);
+
+        if (answer.contains("是")) {
+            return DomainVerdict.legal(0.7, "LLM 判断为法律领域");
+        }
+        return DomainVerdict.nonLegal(0.7, "LLM 判断为非法律领域", "non_legal");
     }
 }

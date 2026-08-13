@@ -1,9 +1,8 @@
 package com.lhs.lawmind.agent.gate;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -23,14 +22,14 @@ import java.util.Map;
 public class IntentClassifierEnhanced {
 
     private final IntentGateConfig config;
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
 
     /** 意图 → 关键词列表（按优先级从高到低匹配） */
     private final Map<IntentType, List<String>> keywordRules;
 
-    public IntentClassifierEnhanced(IntentGateConfig config, ChatLanguageModel chatLanguageModel) {
+    public IntentClassifierEnhanced(IntentGateConfig config, LLMInvoker llmInvoker) {
         this.config = config;
-        this.chatLanguageModel = chatLanguageModel;
+        this.llmInvoker = llmInvoker;
         this.keywordRules = buildKeywordRules();
     }
 
@@ -126,26 +125,24 @@ public class IntentClassifierEnhanced {
      * LLM 兜底分类（仅对关键词未命中的问题调用）。
      */
     private IntentResult llmClassify(String question) {
-        try {
-            String prompt = config.intent().llmPrompt() + question;
-            var messages = List.of(
-                    SystemMessage.from("你是一个法律问题分类助手。仅输出意图类型名称，不要输出其他任何内容。"),
-                    UserMessage.from(prompt));
+        String prompt = config.intent().llmPrompt() + question;
+        var messages = List.of(
+                SystemMessage.from("你是一个法律问题分类助手。仅输出意图类型名称，不要输出其他任何内容。"),
+                UserMessage.from(prompt));
 
-            Response<dev.langchain4j.data.message.AiMessage> response =
-                    chatLanguageModel.generate(messages);
-            String answer = response.content().text().trim();
-
-            log.info("[IntentClassifier] LLM 分类结果: answer={}", answer);
-
-            IntentType intentType = parseIntentType(answer);
-            String route = suggestRoute(intentType);
-            return IntentResult.llm(intentType, 0.7, route);
-        } catch (Exception e) {
-            log.error("[IntentClassifier] LLM 分类失败，默认 LEGAL_CONSULTATION: error={}",
-                    e.getMessage());
+        LLMInvoker.LLMResult result = llmInvoker.invoke(messages);
+        if (!result.success()) {
+            log.warn("[IntentClassifier] LLM 分类失败，默认 LEGAL_CONSULTATION: {}",
+                    result.answer());
             return IntentResult.rule(IntentType.LEGAL_CONSULTATION, 0.4, "agent");
         }
+
+        String answer = result.answer().trim();
+        log.info("[IntentClassifier] LLM 分类结果: answer={}", answer);
+
+        IntentType intentType = parseIntentType(answer);
+        String route = suggestRoute(intentType);
+        return IntentResult.llm(intentType, 0.7, route);
     }
 
     /**

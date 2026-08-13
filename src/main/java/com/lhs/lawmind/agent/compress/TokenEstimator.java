@@ -8,8 +8,9 @@ import java.util.regex.Pattern;
 
 /**
  * Token 估算器 —— 中英混合文本的 token 数估算。
- * 中文约 1.5 字符/token，英文约 1.3 单词/token（基于 GPT tokenizer 经验值）。
- * 不追求精确，误差在 ±20% 以内即可满足压缩决策需求。
+ * 中文约 1.2 字符/token，英文约 1.3 单词/token，其他字符约 0.25 token/字符。
+ * 校准（P2-12）：中文从 1.5 字符/token 下调至 1.2，避免低估导致上下文超限；
+ * 取略保守值以支撑压缩/截断决策（宁可稍多估算，不可溢出模型上下文）。
  */
 public class TokenEstimator {
 
@@ -44,7 +45,7 @@ public class TokenEstimator {
             }
         }
 
-        return (int) Math.ceil(chineseChars / 1.5 + englishWords * 1.3 + otherChars * 0.3);
+        return (int) Math.ceil(chineseChars / 1.2 + englishWords * 1.3 + otherChars * 0.25);
     }
 
     /**

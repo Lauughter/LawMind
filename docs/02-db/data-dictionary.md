@@ -22,7 +22,7 @@
 | 8 | [sys_config](#8-sys_config系统配置表) | 系统配置模块 | 6 |
 | 9 | [security_audit_log](#9-security_audit_log安全审计日志表) | 安全审计模块 | 14 |
 | 10 | [review_log](#10-review_log反馈审核日志表) | 反馈审核模块 | 9 |
-| 11 | [rag_metrics_daily](#11-rag_metrics_dailyrag指标日报表) | 可观测性/评估模块 | 21 |
+| 11 | [rag_metrics_daily](#11-rag_metrics_dailyrag指标日报表) | 可观测性/评估模块 | 23 |
 | 12 | [evaluation_report](#12-evaluation_report评估报告表) | 质量评估模块 | 16 |
 | 13 | [ai_memory](#13-ai_memory统一记忆表) | 记忆系统模块 | 15 |
 
@@ -221,6 +221,8 @@
 | knowledge_hits | BIGINT | 是 | 0 | 知识库命中数 |
 | llm_direct_count | BIGINT | 是 | 0 | LLM 直接回答数 |
 | non_legal_count | BIGINT | 是 | 0 | 非法律问题拦截数 |
+| gate_reject_count | BIGINT | 是 | 0 | 意图门控拒绝数 |
+| gate_degraded_count | BIGINT | 是 | 0 | 意图门控异常降级数 |
 | avg_latency_ms | BIGINT | 是 | 0 | 平均延迟（毫秒） |
 | p50_latency_ms | BIGINT | 是 | 0 | P50 延迟 |
 | p95_latency_ms | BIGINT | 是 | 0 | P95 延迟 |

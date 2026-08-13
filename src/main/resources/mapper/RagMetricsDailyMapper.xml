@@ -7,13 +7,15 @@
     <insert id="insert" parameterType="com.lhs.lawmind.entity.RagMetricsDaily" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO rag_metrics_daily (
             metric_date, total_requests, knowledge_hits,
-            llm_direct_count, non_legal_count, avg_latency_ms, p50_latency_ms, p95_latency_ms,
+            llm_direct_count, non_legal_count, gate_reject_count, gate_degraded_count,
+            avg_latency_ms, p50_latency_ms, p95_latency_ms,
             total_likes, total_dislikes, avg_top_score, llm_fallback_rate, hyde_count,
             feedback_inaccurate, feedback_wrong_citation, feedback_irrelevant,
             feedback_too_vague, feedback_other
         ) VALUES (
             #{metricDate}, #{totalRequests}, #{knowledgeHits},
-            #{llmDirectCount}, #{nonLegalCount}, #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
+            #{llmDirectCount}, #{nonLegalCount}, #{gateRejectCount}, #{gateDegradedCount},
+            #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
             #{totalLikes}, #{totalDislikes}, #{avgTopScore}, #{llmFallbackRate}, #{hydeCount},
             #{feedbackInaccurate}, #{feedbackWrongCitation}, #{feedbackIrrelevant},
             #{feedbackTooVague}, #{feedbackOther}
@@ -23,13 +25,15 @@
     <insert id="upsert" parameterType="com.lhs.lawmind.entity.RagMetricsDaily">
         INSERT INTO rag_metrics_daily (
             metric_date, total_requests, knowledge_hits,
-            llm_direct_count, non_legal_count, avg_latency_ms, p50_latency_ms, p95_latency_ms,
+            llm_direct_count, non_legal_count, gate_reject_count, gate_degraded_count,
+            avg_latency_ms, p50_latency_ms, p95_latency_ms,
             total_likes, total_dislikes, avg_top_score, llm_fallback_rate, hyde_count,
             feedback_inaccurate, feedback_wrong_citation, feedback_irrelevant,
             feedback_too_vague, feedback_other
         ) VALUES (
             #{metricDate}, #{totalRequests}, #{knowledgeHits},
-            #{llmDirectCount}, #{nonLegalCount}, #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
+            #{llmDirectCount}, #{nonLegalCount}, #{gateRejectCount}, #{gateDegradedCount},
+            #{avgLatencyMs}, #{p50LatencyMs}, #{p95LatencyMs},
             #{totalLikes}, #{totalDislikes}, #{avgTopScore}, #{llmFallbackRate}, #{hydeCount},
             #{feedbackInaccurate}, #{feedbackWrongCitation}, #{feedbackIrrelevant},
             #{feedbackTooVague}, #{feedbackOther}
@@ -38,6 +42,8 @@
             knowledge_hits = VALUES(knowledge_hits),
             llm_direct_count = VALUES(llm_direct_count),
             non_legal_count = VALUES(non_legal_count),
+            gate_reject_count = VALUES(gate_reject_count),
+            gate_degraded_count = VALUES(gate_degraded_count),
             avg_latency_ms = VALUES(avg_latency_ms),
             p50_latency_ms = VALUES(p50_latency_ms),
             p95_latency_ms = VALUES(p95_latency_ms),

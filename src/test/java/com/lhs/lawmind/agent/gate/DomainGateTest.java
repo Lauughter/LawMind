@@ -1,5 +1,6 @@
 package com.lhs.lawmind.agent.gate;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,10 +21,12 @@ class DomainGateTest {
     @Mock
     private ChatLanguageModel chatLanguageModel;
 
+    private LLMInvoker llmInvoker;
     private DomainGate domainGate;
 
     @BeforeEach
     void setUp() {
+        llmInvoker = new LLMInvoker(Optional.of(chatLanguageModel), Optional.empty());
         var config = new IntentGateConfig(
                 true, // ruleOnly = true, 不调 LLM
                 new IntentGateConfig.DomainConfig(
@@ -36,7 +40,7 @@ class DomainGateTest {
                 null, null, null,
                 java.util.Map.of()
         );
-        domainGate = new DomainGate(config, chatLanguageModel);
+        domainGate = new DomainGate(config, llmInvoker);
     }
 
     @Test

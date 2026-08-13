@@ -14,6 +14,7 @@
 | [rag-gap-analysis.md](rag-gap-analysis.md) | 企业级 RAG 差距分析与优化路线图 | 📝 |
 | [project-tech-details.md](project-tech-details.md) | 项目技术详解（面试备用，内容已分解进 01-architecture） | 📝 |
 | [resume-copy.md](resume-copy.md) | 个人简历文案（非项目文档，可按需删除） | 📝 |
+| [agent-optimization-plan.md](agent-optimization-plan.md) | **Agent 子系统优化方案（工作文档，逐项实施中）** | 🚧 |
 
 ## 关联资产
 

@@ -13,7 +13,7 @@ LawMind 是一款面向中国法律垂直场景的智能问答平台，核心链
 | 项 | 值 |
 |----|----|
 | 技术栈 | Spring Boot 3.5 + Java 17 + LangChain4j 0.36 + Redis Stack 7.4 + MySQL 8 + MyBatis + Vue 3 |
-| 文档体系 | 面向 AI 的结构化文档（共 50 份文档，7 层） |
+| 文档体系 | 面向 AI 的结构化文档（共 51 份文档，7 层） |
 
 ## 二、模块地图
 
@@ -95,6 +95,7 @@ docs/
 | [rag-gap-analysis.md](06-reference/rag-gap-analysis.md) | 企业级 RAG 差距分析 |
 | [project-tech-details.md](06-reference/project-tech-details.md) | 项目技术详解 |
 | [resume-copy.md](06-reference/resume-copy.md) | 简历文案（可删） |
+| [agent-optimization-plan.md](06-reference/agent-optimization-plan.md) | Agent 子系统优化方案（工作文档） |
 | **资产** | |
 | [golden-dataset-rag-evaluation.json](golden-dataset-rag-evaluation.json) | 质量评估标注集（被代码/CI 硬引用，勿移动） |
 

@@ -1,7 +1,7 @@
 # 多级 RAG 检索管道
 
 > 版本：V1.0 | 日期：2026-08-12 | 状态：✅ 已实现
-> 事实源：`（旧散文档：检索策略模块详解 / RRF融合与BM25 / MMR算法说明，已分解合并入本文）`、源码 `RagServiceImpl.java`、`HybridSearchServiceImpl.java`、`RerankServiceImpl.java`、`SearchResultDiversifier.java`、`RagConfig.java`
+> 事实源：`（旧散文档：检索策略模块详解 / RRF融合与BM25 / MMR算法说明，已分解合并入本文）`、源码 `RagServiceImpl.java`、`rag/` 包（RagRetrievalService / RagPromptBuilder / QueryEnhancer / CitationVerifier / LegalQuestionClassifier / SseStreamHelper）、`HybridSearchServiceImpl.java`、`RerankServiceImpl.java`、`SearchResultDiversifier.java`、`RagConfig.java`
 > 关联：`overview.md`、`agent-orchestration.md`（Agent 工具复用本管道）、`evaluation.md`（检索质量评估）
 
 ---

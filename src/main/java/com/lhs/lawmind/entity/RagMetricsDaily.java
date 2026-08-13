@@ -13,6 +13,8 @@ public class RagMetricsDaily {
     private Long knowledgeHits;
     private Long llmDirectCount;
     private Long nonLegalCount;
+    private Long gateRejectCount;
+    private Long gateDegradedCount;
     private Long avgLatencyMs;
     private Long p50LatencyMs;
     private Long p95LatencyMs;

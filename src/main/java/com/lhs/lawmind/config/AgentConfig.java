@@ -1,6 +1,7 @@
 package com.lhs.lawmind.config;
 
 import com.lhs.lawmind.agent.AgentRunner;
+import com.lhs.lawmind.llm.LLMInvoker;
 import com.lhs.lawmind.agent.compress.*;
 import com.lhs.lawmind.agent.memory.MemoryManager;
 import com.lhs.lawmind.agent.monitor.AgentMetricsCollector;
@@ -10,6 +11,7 @@ import com.lhs.lawmind.agent.tool.LawVerificationTools;
 import com.lhs.lawmind.agent.tool.RetrieveMemoryTool;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -102,12 +104,10 @@ public class AgentConfig {
             - 金额计算示例格式：赔偿金 = 月工资 × 工作年限 × 2 = 8000 × 3 × 2 = 48000元
             """;
 
-    private static final int MAX_ITERATIONS = 5;
-
     @Bean
     @ConditionalOnProperty(prefix = "lawmind.agent.compression", name = "enabled",
             havingValue = "true", matchIfMissing = true)
-    public ContextCompressor contextCompressor(ChatLanguageModel chatLanguageModel,
+    public ContextCompressor contextCompressor(LLMInvoker llmInvoker,
                                                 CompressionConfig compressionConfig) {
         log.info("[Agent] 初始化上下文压缩器: enabled={}, keepFullRecent={}, maxArticles={}",
                 compressionConfig.enabled(),
@@ -117,7 +117,7 @@ public class AgentConfig {
         TokenEstimator tokenEstimator = new TokenEstimator();
         RuleExtractor ruleExtractor = new RuleExtractor();
         SummarizingCompressor summarizingCompressor = new SummarizingCompressor(
-                chatLanguageModel, tokenEstimator, compressionConfig.minSavingsRatio());
+                llmInvoker, tokenEstimator, compressionConfig.minSavingsRatio());
         KnowledgeState knowledgeState = new KnowledgeState(
                 compressionConfig.knowledgeState().maxArticles());
 
@@ -127,14 +127,16 @@ public class AgentConfig {
     }
 
     @Bean
-    public AgentRunner agentRunner(ChatLanguageModel chatLanguageModel,
+    public AgentRunner agentRunner(LLMInvoker llmInvoker,
                                    LawSearchTools lawSearchTools,
                                    LawIntentTools lawIntentTools,
                                    LawVerificationTools lawVerificationTools,
                                    RetrieveMemoryTool retrieveMemoryTool,
                                    AgentMetricsCollector metricsCollector,
                                    ContextCompressor contextCompressor,
-                                   MemoryManager memoryManager) {
+                                   MemoryManager memoryManager,
+                                   @Value("${lawmind.agent.max-iterations:5}") int maxIterations,
+                                   @Value("${lawmind.agent.max-duration-ms:60000}") long maxDurationMs) {
         List<Object> toolObjects = new ArrayList<>();
         toolObjects.add(lawSearchTools);
         toolObjects.add(lawIntentTools);
@@ -143,15 +145,16 @@ public class AgentConfig {
             toolObjects.add(retrieveMemoryTool);
         }
 
-        log.info("[Agent] 初始化 AgentRunner: chatModel={}, maxIterations={}, toolCount={}, "
+        log.info("[Agent] 初始化 AgentRunner: chatModel={}, maxIterations={}, maxDurationMs={}, toolCount={}, "
                 + "compressor={}, memory={}",
-                chatLanguageModel != null ? "available" : "unavailable",
-                MAX_ITERATIONS,
+                llmInvoker.isAvailable() ? "available" : "unavailable",
+                maxIterations,
+                maxDurationMs,
                 toolObjects.size(),
                 contextCompressor != null ? "enabled" : "disabled",
                 memoryManager != null ? "enabled" : "disabled");
 
-        return new AgentRunner(chatLanguageModel, SYSTEM_PROMPT, toolObjects,
-                MAX_ITERATIONS, metricsCollector, contextCompressor, memoryManager);
+        return new AgentRunner(llmInvoker, SYSTEM_PROMPT, toolObjects,
+                maxIterations, maxDurationMs, metricsCollector, contextCompressor, memoryManager);
     }
 }

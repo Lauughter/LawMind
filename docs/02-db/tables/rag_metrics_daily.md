@@ -16,6 +16,8 @@
 | knowledge_hits | BIGINT | 是 | 0 | 知识库命中数 |
 | llm_direct_count | BIGINT | 是 | 0 | LLM 直接回答数 |
 | non_legal_count | BIGINT | 是 | 0 | 非法律问题拦截数 |
+| gate_reject_count | BIGINT | 是 | 0 | 意图门控拒绝数 |
+| gate_degraded_count | BIGINT | 是 | 0 | 意图门控异常降级数 |
 | avg_latency_ms | BIGINT | 是 | 0 | 平均延迟（毫秒） |
 | p50_latency_ms | BIGINT | 是 | 0 | P50 延迟 |
 | p95_latency_ms | BIGINT | 是 | 0 | P95 延迟 |

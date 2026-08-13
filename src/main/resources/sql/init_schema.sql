@@ -215,6 +215,8 @@ CREATE TABLE IF NOT EXISTS rag_metrics_daily (
     knowledge_hits BIGINT DEFAULT 0 COMMENT '知识库命中数',
     llm_direct_count BIGINT DEFAULT 0 COMMENT 'LLM直接回答数',
     non_legal_count BIGINT DEFAULT 0 COMMENT '非法律问题拦截数',
+    gate_reject_count BIGINT DEFAULT 0 COMMENT '意图门控拒绝数',
+    gate_degraded_count BIGINT DEFAULT 0 COMMENT '意图门控异常降级数',
     avg_latency_ms BIGINT DEFAULT 0 COMMENT '平均延迟(毫秒)',
     p50_latency_ms BIGINT DEFAULT 0 COMMENT 'P50延迟',
     p95_latency_ms BIGINT DEFAULT 0 COMMENT 'P95延迟',

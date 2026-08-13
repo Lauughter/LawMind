@@ -13,11 +13,11 @@
 | 子模块 | 关键类 | 涉及表 | 说明 |
 |--------|--------|--------|------|
 | 敏感话题过滤 | `SensitiveTopicFilter` | — | 6 类敏感词库，业务前拦截 |
-| 法律相关性判定 | `RagServiceImpl.isLegalRelatedQuestion()` | — | 非法律问题拒答 |
+| 法律相关性判定 | `rag.LegalQuestionClassifier` | — | 非法律问题拒答 |
 | 提示注入防护 | `RagServiceImpl.sanitizeUserInput()` | — | 清理 markdown + 注入模式 |
 | PII 脱敏 | `PiiUtil` | — | 身份证/手机/银行卡/邮箱/IPv4 掩码 |
-| 合规声明 | `RagServiceImpl` | — | AI 生成免责声明 |
-| 引用验证闭环 | `RagServiceImpl.verifyCitations()` | — | UNVERIFIED 警告 |
+| 合规声明 | `rag.RagPromptBuilder` | — | AI 生成免责声明 |
+| 引用验证闭环 | `rag.CitationVerifier` | — | UNVERIFIED 警告 |
 | 法律分块 | `LegalArticleChunker` | `knowledge_chunk` | 按"编章节约条款"结构分块 |
 | 安全审计 | `SecurityAuditAspect` + `@SecurityAudit` | MySQL `security_audit_log` | 操作审计，异常不丢日志 |
 

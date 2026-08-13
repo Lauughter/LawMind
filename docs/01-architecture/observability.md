@@ -42,7 +42,7 @@ RagMetricsController 查询（Redis 实时优先，MySQL 回退）→ 质量看�
 
 ### 2.2 日报字段（`rag_metrics_daily`）
 
-`total_requests`、`knowledge_hits`/`llm_direct_count`/`non_legal_count`（来源分布）、`avg/p50/p95_latency_ms`、`hyde_count`、`total_likes`/`total_dislikes`、`avg_top_score`、`llm_fallback_rate`、`feedback_inaccurate/wrong_citation/irrelevant/too_vague/other`。
+`total_requests`、`knowledge_hits`/`llm_direct_count`/`non_legal_count`/`gate_reject_count`/`gate_degraded_count`（来源分布）、`avg/p50/p95_latency_ms`、`hyde_count`、`total_likes`/`total_dislikes`、`avg_top_score`、`llm_fallback_rate`、`feedback_inaccurate/wrong_citation/irrelevant/too_vague/other`。
 
 ### 2.3 AOP 日志三层切面
 

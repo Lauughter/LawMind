@@ -101,6 +101,20 @@ for (iteration = 0; iteration < 5; iteration++) {
 5. 循环耗尽 → 压缩 + 强制最终答案
 ```
 
+**流式推理（P0-3）**：`AgentRunner.execute(..., Consumer<AgentEvent>)` 通过事件回调逐步推送推理过程，供 SSE 实时转发：
+- `AgentEventType.THOUGHT`（思考）→ SSE `agent_thought`
+- `AgentEventType.TOOL_CALL`（工具调用）→ SSE `agent_tool_call`
+- `AgentEventType.TOOL_RESULT`（压缩后结果）→ SSE `agent_tool_result`
+- `AgentEventType.FINAL`（最终答案）→ execute 返回后由 `AgentController` 逐字流式推送 `message`
+
+前端 `sse.js` 解析新事件并渲染为推理步骤条；旧 4 参 `execute` 委托到带回调版本（默认空回调，向后兼容）。
+
+**记忆独立消息（P1-5）**：`buildInitialMessages` 将记忆内容作为**独立 SystemMessage** 注入（而非拼进系统指令），区分「系统规则」与「用户画像/历史」，避免混淆。
+
+**多轮对话上下文（P1-4）**：`execute(..., conversationHistory)` 支持注入历史对话文本（「用户: …\n助手: …」格式，作为独立 SystemMessage）；`AgentController` 用 `AiChatService.selectByConversationId` 构建并传入，增强多轮追问能力。
+
+**配置化（P2-8/9）**：`lawmind.agent.max-iterations`（ReAct 最大轮数，默认 5）与 `lawmind.agent.max-duration-ms`（推理总耗时上限，默认 60000ms）由配置控制；超过总耗时上限时强制收尾生成最终答案，防止拖死线程。
+
 **工具注册**：`registerTools()` 反射扫描 `@Tool` 注解 → `ToolSpecifications.toolSpecificationsFrom()` 生成规范；`@P` 提供参数说明；构建 `ToolMethod(instance+Method+paramNames)` 存入注册表。
 
 ### 2.5 上下文压缩（4 层渐进）

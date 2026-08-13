@@ -155,6 +155,8 @@ rag:
 
 # ========== Agent 上下文压缩配置 ==========
   agent:
+    max-iterations: 5          # ReAct 最大轮数
+    max-duration-ms: 60000      # Agent 推理总耗时上限（ms），超时强制收尾
     compression:
       enabled: true
       single-result-threshold: 500

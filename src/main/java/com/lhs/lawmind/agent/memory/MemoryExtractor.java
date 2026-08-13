@@ -3,10 +3,10 @@ package com.lhs.lawmind.agent.memory;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -78,11 +78,11 @@ public class MemoryExtractor {
             }
             如果没有值得记忆的内容，返回 { "memories": [] }""";
 
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
     private final MemoryStore memoryStore;
 
-    public MemoryExtractor(ChatLanguageModel chatLanguageModel, MemoryStore memoryStore) {
-        this.chatLanguageModel = chatLanguageModel;
+    public MemoryExtractor(LLMInvoker llmInvoker, MemoryStore memoryStore) {
+        this.llmInvoker = llmInvoker;
         this.memoryStore = memoryStore;
     }
 
@@ -94,10 +94,8 @@ public class MemoryExtractor {
             String conversationText = formatMessages(messages);
             String prompt = EXTRACTION_PROMPT.replace("{conversation}", conversationText);
 
-            var response = chatLanguageModel.generate(
-                    List.of(SystemMessage.from(prompt), UserMessage.from("请提取记忆。")));
-
-            String json = response.content().text();
+            String json = llmInvoker.invoke(
+                    List.of(SystemMessage.from(prompt), UserMessage.from("请提取记忆。"))).answer();
             json = stripMarkdownCodeBlock(json);
 
             JSONObject parsed = JSONUtil.parseObj(json);

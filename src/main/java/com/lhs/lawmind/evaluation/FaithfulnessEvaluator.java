@@ -2,11 +2,9 @@ package com.lhs.lawmind.evaluation;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.langchain4j.data.message.AiMessage;
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -21,7 +19,7 @@ import java.util.Optional;
 @Slf4j
 public class FaithfulnessEvaluator {
 
-    private final ChatLanguageModel model;
+    private final LLMInvoker llmInvoker;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private static final String SYSTEM_PROMPT = """
@@ -37,8 +35,8 @@ public class FaithfulnessEvaluator {
 
             只输出 JSON 数组，不要输出其他内容。""";
 
-    public FaithfulnessEvaluator(Optional<ChatLanguageModel> model) {
-        this.model = model.orElse(null);
+    public FaithfulnessEvaluator(LLMInvoker llmInvoker) {
+        this.llmInvoker = llmInvoker;
     }
 
     /**
@@ -48,7 +46,7 @@ public class FaithfulnessEvaluator {
      * @return 忠实度得分 0.0-1.0，如果 LLM 不可用返回 0.0
      */
     public double evaluate(String answer, List<String> contexts) {
-        if (model == null || answer == null || answer.isBlank() || contexts == null || contexts.isEmpty()) {
+        if (!llmInvoker.isAvailable() || answer == null || answer.isBlank() || contexts == null || contexts.isEmpty()) {
             return 0.0;
         }
 
@@ -59,18 +57,16 @@ public class FaithfulnessEvaluator {
 
         String userMessage = "回答：\n" + answer + "\n\n法律知识原文：\n" + contextText;
 
-        try {
-            Response<AiMessage> response = model.generate(
-                    SystemMessage.from(SYSTEM_PROMPT),
-                    UserMessage.from(userMessage)
-            );
-
-            String json = response.content().text();
-            return parseFaithfulness(json);
-        } catch (Exception e) {
-            log.warn("Faithfulness 评估失败: {}", e.getMessage());
+        LLMInvoker.LLMResult result = llmInvoker.invoke(List.of(
+                SystemMessage.from(SYSTEM_PROMPT),
+                UserMessage.from(userMessage)));
+        if (!result.success()) {
+            log.warn("Faithfulness 评估失败: {}", result.answer());
             return 0.0;
         }
+
+        String json = result.answer();
+        return parseFaithfulness(json);
     }
 
     // ──────────── 结果解析 ────────────

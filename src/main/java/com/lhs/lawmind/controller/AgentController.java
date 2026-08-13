@@ -10,6 +10,7 @@ import com.lhs.lawmind.entity.AiChat;
 import com.lhs.lawmind.entity.Conversation;
 import com.lhs.lawmind.service.AiChatService;
 import com.lhs.lawmind.service.ConversationService;
+import com.lhs.lawmind.service.RagMetricsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -30,6 +32,7 @@ public class AgentController {
     private final FastChannelHandler fastChannelHandler;
     private final ConversationService conversationService;
     private final AiChatService aiChatService;
+    private final RagMetricsService ragMetricsService;
 
     @Value("${lawmind.admin-user-id:1}")
     private Long adminUserId;
@@ -39,13 +42,15 @@ public class AgentController {
                            IntentGate intentGate,
                            FastChannelHandler fastChannelHandler,
                            ConversationService conversationService,
-                           AiChatService aiChatService) {
+                           AiChatService aiChatService,
+                           RagMetricsService ragMetricsService) {
         this.agentRunner = agentRunner;
         this.metricsCollector = metricsCollector;
         this.intentGate = intentGate;
         this.fastChannelHandler = fastChannelHandler;
         this.conversationService = conversationService;
         this.aiChatService = aiChatService;
+        this.ragMetricsService = ragMetricsService;
     }
 
     @PostMapping(value = "/ask", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -82,6 +87,14 @@ public class AgentController {
 
         metricsCollector.recordGateProcess(gateResult);
 
+        // P1-6 门控统计持久化：reject / 异常降级 计入 rag_metrics 日报
+        if (!gateResult.accepted()) {
+            ragMetricsService.recordRequest("gate_reject", 0, 0, 0, 0, 0, 0, 0.0, false, null);
+        } else if (gateResult.routeDecision().strategy() != null
+                && gateResult.routeDecision().strategy().contains("降级")) {
+            ragMetricsService.recordRequest("gate_degraded", 0, 0, 0, 0, 0, 0, 0.0, false, null);
+        }
+
         if (!gateResult.accepted()) {
             return rejectEmitter(gateResult.rejectResponse());
         }
@@ -110,6 +123,30 @@ public class AgentController {
         }
         Conversation conv = conversationService.create(userId, "新对话");
         return conv.getId();
+    }
+
+    /**
+     * 构建会话历史上下文文本（P1-4 多轮对话）。
+     */
+    private String buildConversationHistory(Long conversationId) {
+        if (conversationId == null) return "";
+        try {
+            List<AiChat> history = aiChatService.selectByConversationId(conversationId);
+            if (history == null || history.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder();
+            for (AiChat chat : history) {
+                sb.append("用户: ").append(chat.getUserQuestion()).append("\n");
+                String answer = chat.getAiAnswer();
+                if (answer != null && answer.length() > 500) {
+                    answer = answer.substring(0, 500) + "...";
+                }
+                sb.append("助手: ").append(answer).append("\n\n");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.warn("构建会话历史失败: conversationId={}, error={}", conversationId, e.getMessage());
+            return "";
+        }
     }
 
     /**
@@ -185,8 +222,25 @@ public class AgentController {
 
         new Thread(() -> {
             try {
+                // ★ P1-4 多轮对话：注入会话历史
+                String history = buildConversationHistory(conversationId);
+                // ★ P0-3 流式：通过回调逐步推送推理过程（Thought / ToolCall / 结果）
                 AgentRunner.AgentResult result = agentRunner.execute(
-                        question.trim(), null, userId, null);
+                        question.trim(), null, userId, null, event -> {
+                    try {
+                        switch (event.type()) {
+                            case THOUGHT -> emitter.send(SseEmitter.event()
+                                    .name("agent_thought").data(event.content()));
+                            case TOOL_CALL -> emitter.send(SseEmitter.event()
+                                    .name("agent_tool_call").data(event.content()));
+                            case TOOL_RESULT -> emitter.send(SseEmitter.event()
+                                    .name("agent_tool_result").data(event.content()));
+                            case FINAL -> { /* 最终答案在 execute 返回后统一流式发送 */ }
+                        }
+                    } catch (IOException e) {
+                        log.warn("[Agent] 流式事件推送失败: {}", e.getMessage());
+                    }
+                }, history);
 
                 if (result.success()) {
                     String answer = result.answer();

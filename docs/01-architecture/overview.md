@@ -17,7 +17,7 @@ LawMind 是一个面向法律领域的智能问答系统，核心链路为**意�
 | Web 层 | 鉴权、SSE 流式、日志 | `AiChatController`、`AgentController`、`JwtInterceptor` |
 | 门控层 | 领域/意图/复杂度/路由四级判定 | `IntentGate`、`DomainGate`、`IntentClassifierEnhanced`、`ComplexityAssessor`、`IntentRouter` |
 | 通道层 | Fast/Hybrid/Agent 三通道 | `FastChannelHandler`、`AgentRunner` |
-| RAG 检索层 | 预处理、召回、融合、精排 | `RagServiceImpl`、`HybridSearchServiceImpl`、`RerankServiceImpl`、`SearchResultDiversifier` |
+| RAG 检索层 | 预处理、召回、融合、精排 | `RagServiceImpl`（编排）、`rag/` 子包（RagRetrievalService/RagPromptBuilder/QueryEnhancer/CitationVerifier）、`HybridSearchServiceImpl`、`RerankServiceImpl` |
 | 增强层 | 上下文压缩、记忆 | `ContextCompressor`、`KnowledgeState`、`MemoryManager` |
 | 数据层 | MySQL 主存储 + Redis 向量 | MyBatis Mapper、`RedisVectorUtil`、`RedisIndexInitializer` |
 | 质量/可观测 | 评估、指标、审计 | `GoldenDatasetEvaluator`、`RagMetricsServiceImpl`、`AgentMetricsCollector`、`SecurityAuditAspect` |

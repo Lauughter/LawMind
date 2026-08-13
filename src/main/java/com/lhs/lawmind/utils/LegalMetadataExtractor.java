@@ -1,11 +1,12 @@
 package com.lhs.lawmind.utils;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import com.lhs.lawmind.llm.LLMInvoker;
+import dev.langchain4j.data.message.UserMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
 @Component
 public class LegalMetadataExtractor {
 
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
 
     // 匹配格式：中华人民共和国XXX法/条例/决定/办法/细则/规定/意见/规则/规程/规范/通则/解释/指引/守则
     private static final Pattern LAW_TYPE_PATTERN =
@@ -66,8 +67,8 @@ public class LegalMetadataExtractor {
     private static final Pattern GENERIC_ORG_PATTERN =
             Pattern.compile("([一-龥]{2,20}(?:部|院|局|委|会|署|行|厅))");
 
-    public LegalMetadataExtractor(Optional<ChatLanguageModel> chatLanguageModel) {
-        this.chatLanguageModel = chatLanguageModel.orElse(null);
+    public LegalMetadataExtractor(LLMInvoker llmInvoker) {
+        this.llmInvoker = llmInvoker;
     }
 
     public MetadataResult extract(String text, String fileName) {
@@ -192,38 +193,34 @@ public class LegalMetadataExtractor {
      * 仅发送前 1500 字，减少 token 消耗
      */
     private String extractPublisherWithAI(String text) {
-        if (chatLanguageModel == null) return null;
-        try {
-            String header = text.length() > 1500 ? text.substring(0, 1500) : text;
-            String prompt = """
-                    你是一个中国法律文档分析助手。请从以下法律文档的头部信息中提取"发布机构"。
+        if (!llmInvoker.isAvailable()) return null;
+        String header = text.length() > 1500 ? text.substring(0, 1500) : text;
+        String prompt = """
+                你是一个中国法律文档分析助手。请从以下法律文档的头部信息中提取"发布机构"。
 
-                    发布机构是指通过或发布该法律的最高权力机关，例如：
-                    - 全国人民代表大会
-                    - 全国人民代表大会常务委员会
-                    - 国务院
-                    - 最高人民法院
-                    - 最高人民检察院
-                    - 中央军事委员会
+                发布机构是指通过或发布该法律的最高权力机关，例如：
+                - 全国人民代表大会
+                - 全国人民代表大会常务委员会
+                - 国务院
+                - 最高人民法院
+                - 最高人民检察院
+                - 中央军事委员会
 
-                    文档头部内容：
-                    """
-                    + header + "\n\n"
-                    + "请只输出发布机构的完整名称，不要输出其他内容。如果无法判断，请输出 UNKNOWN。";
+                文档头部内容：
+                """
+                + header + "\n\n"
+                + "请只输出发布机构的完整名称，不要输出其他内容。如果无法判断，请输出 UNKNOWN。";
 
-            String result = chatLanguageModel.generate(prompt);
-            if (result != null) {
-                result = result.trim();
-                if (!result.isEmpty() && !"UNKNOWN".equalsIgnoreCase(result)) {
-                    // 清理 AI 输出中可能的引号、句号等
-                    result = result.replaceAll("[\"'。，\\s]", "");
-                    if (result.length() >= 2 && result.length() <= 50) {
-                        return result;
-                    }
+        String result = llmInvoker.invoke(List.of(UserMessage.from(prompt))).answer();
+        if (result != null) {
+            result = result.trim();
+            if (!result.isEmpty() && !"UNKNOWN".equalsIgnoreCase(result)) {
+                // 清理 AI 输出中可能的引号、句号等
+                result = result.replaceAll("[\"'。，\\s]", "");
+                if (result.length() >= 2 && result.length() <= 50) {
+                    return result;
                 }
             }
-        } catch (Exception e) {
-            log.warn("AI 提取发布机构失败: {}", e.getMessage());
         }
         return null;
     }

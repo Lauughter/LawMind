@@ -1,7 +1,6 @@
 package com.lhs.lawmind.evaluation;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import com.lhs.lawmind.llm.LLMInvoker;
 import com.lhs.lawmind.utils.EmbeddingUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,10 @@ public class RagasEvaluationService {
     private final FaithfulnessEvaluator faithfulnessEvaluator;
     private final AnswerRelevanceEvaluator relevanceEvaluator;
 
-    public RagasEvaluationService(Optional<ChatLanguageModel> chatModel,
-                                   Optional<StreamingChatLanguageModel> streamingModel,
+    public RagasEvaluationService(LLMInvoker llmInvoker,
                                    Optional<EmbeddingUtil> embeddingUtil) {
-        this.faithfulnessEvaluator = new FaithfulnessEvaluator(chatModel);
-        this.relevanceEvaluator = new AnswerRelevanceEvaluator(chatModel, embeddingUtil);
+        this.faithfulnessEvaluator = new FaithfulnessEvaluator(llmInvoker);
+        this.relevanceEvaluator = new AnswerRelevanceEvaluator(llmInvoker, embeddingUtil);
     }
 
     /**

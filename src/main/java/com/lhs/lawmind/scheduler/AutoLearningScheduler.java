@@ -4,8 +4,9 @@ import com.lhs.lawmind.entity.AiChat;
 import com.lhs.lawmind.entity.LawKnowledge;
 import com.lhs.lawmind.mapper.AiChatMapper;
 import com.lhs.lawmind.mapper.LawKnowledgeMapper;
+import com.lhs.lawmind.llm.LLMInvoker;
 import com.lhs.lawmind.service.AsyncVectorizeService;
-import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.data.message.UserMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,7 +30,7 @@ public class AutoLearningScheduler {
     private final AiChatMapper aiChatMapper;
     private final LawKnowledgeMapper lawKnowledgeMapper;
     private final AsyncVectorizeService asyncVectorizeService;
-    private final ChatLanguageModel chatLanguageModel;
+    private final LLMInvoker llmInvoker;
     private final boolean autoLearningEnabled;
     private final int batchSize;
     private final String cronExpression;
@@ -37,14 +38,14 @@ public class AutoLearningScheduler {
     public AutoLearningScheduler(AiChatMapper aiChatMapper,
                                   LawKnowledgeMapper lawKnowledgeMapper,
                                   AsyncVectorizeService asyncVectorizeService,
-                                  Optional<ChatLanguageModel> chatLanguageModel,
+                                  LLMInvoker llmInvoker,
                                   @Value("${rag.auto-learning.enabled:false}") boolean autoLearningEnabled,
                                   @Value("${rag.auto-learning.batch-size:10}") int batchSize,
                                   @Value("${rag.auto-learning.cron:0 0 2 * * ?}") String cronExpression) {
         this.aiChatMapper = aiChatMapper;
         this.lawKnowledgeMapper = lawKnowledgeMapper;
         this.asyncVectorizeService = asyncVectorizeService;
-        this.chatLanguageModel = chatLanguageModel.orElse(null);
+        this.llmInvoker = llmInvoker;
         this.autoLearningEnabled = autoLearningEnabled;
         this.batchSize = batchSize;
         this.cronExpression = cronExpression;
@@ -105,39 +106,33 @@ public class AutoLearningScheduler {
      * 大模型生成法律知识点
      */
     private LawKnowledge generateLawKnowledge(String question) {
-        if (chatLanguageModel == null) {
-            log.warn("ChatLanguageModel 未初始化，无法生成法律知识点");
+        if (!llmInvoker.isAvailable()) {
+            log.warn("LLM 未初始化，无法生成法律知识点");
             return null;
         }
-    
-        try {
-            String prompt = buildGenerateKnowledgePrompt(question);
+
+        String prompt = buildGenerateKnowledgePrompt(question);
+
+        // ========== 打印调用大模型的 Prompt ==========
+        log.info("========================================");
+        log.info("【调用大模型 - 生成法律知识点］");
+        log.info("========================================");
+        log.info("【原始问题］");
+        log.info("{}", question);
+        log.info("----------------------------------------");
+        log.info("【完整 Prompt］");
+        log.info("{}", prompt);
+        log.info("========================================");
+
+        String response = llmInvoker.invoke(List.of(UserMessage.from(prompt))).answer();
                 
-            // ========== 打印调用大模型的 Prompt ==========
-            log.info("========================================");
-            log.info("【调用大模型 - 生成法律知识点］");
-            log.info("========================================");
-            log.info("【原始问题］");
-            log.info("{}", question);
-            log.info("----------------------------------------");
-            log.info("【完整 Prompt］");
-            log.info("{}", prompt);
-            log.info("========================================");
-                
-            String response = chatLanguageModel.generate(prompt);
-                
-            log.info("大模型生成法律知识点成功");
-            log.info("【大模型回答］");
-            log.info("{}", response);
-            log.info("========================================");
-                
-            LawKnowledge knowledge = parseKnowledgeResponse(response, question);
-            return knowledge;
-    
-        } catch (Exception e) {
-            log.error("生成法律知识点失败：{}", e.getMessage(), e);
-            return null;
-        }
+        log.info("大模型生成法律知识点成功");
+        log.info("【大模型回答］");
+        log.info("{}", response);
+        log.info("========================================");
+
+        LawKnowledge knowledge = parseKnowledgeResponse(response, question);
+        return knowledge;
     }
 
     /**

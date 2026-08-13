@@ -1,5 +1,6 @@
 package com.lhs.lawmind.agent.gate;
 
+import com.lhs.lawmind.llm.LLMInvoker;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,10 +22,12 @@ class IntentClassifierEnhancedTest {
     @Mock
     private ChatLanguageModel chatLanguageModel;
 
+    private LLMInvoker llmInvoker;
     private IntentClassifierEnhanced classifier;
 
     @BeforeEach
     void setUp() {
+        llmInvoker = new LLMInvoker(Optional.of(chatLanguageModel), Optional.empty());
         var config = new IntentGateConfig(
                 true, // ruleOnly
                 null,
@@ -53,7 +57,7 @@ class IntentClassifierEnhancedTest {
                         List.of("DOCUMENT_DRAFTING")),
                 Map.of()
         );
-        classifier = new IntentClassifierEnhanced(config, chatLanguageModel);
+        classifier = new IntentClassifierEnhanced(config, llmInvoker);
     }
 
     @Test
