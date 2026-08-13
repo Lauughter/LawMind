@@ -10,7 +10,7 @@
 | 文档 | 说明 |
 |------|------|
 | [conventions.md](conventions.md) | 建表约定：命名 / 通用字段 / 索引 / JSON / ENUM |
-| [data-dictionary.md](data-dictionary.md) | 完整数据字典（14 表 176 字段全量） |
+| [data-dictionary.md](data-dictionary.md) | 完整数据字典（13 表 163 字段全量） |
 
 ## 表清单
 

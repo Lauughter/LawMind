@@ -18,7 +18,7 @@ LawMind 是一个面向法律领域的智能问答系统，核心链路为**意�
 | 门控层 | 领域/意图/复杂度/路由四级判定 | `IntentGate`、`DomainGate`、`IntentClassifierEnhanced`、`ComplexityAssessor`、`IntentRouter` |
 | 通道层 | Fast/Hybrid/Agent 三通道 | `FastChannelHandler`、`AgentRunner` |
 | RAG 检索层 | 预处理、召回、融合、精排 | `RagServiceImpl`、`HybridSearchServiceImpl`、`RerankServiceImpl`、`SearchResultDiversifier` |
-| 增强层 | 上下文压缩、记忆、技能包 | `ContextCompressor`、`KnowledgeState`、`MemoryManager`、`SkillManager` |
+| 增强层 | 上下文压缩、记忆 | `ContextCompressor`、`KnowledgeState`、`MemoryManager` |
 | 数据层 | MySQL 主存储 + Redis 向量 | MyBatis Mapper、`RedisVectorUtil`、`RedisIndexInitializer` |
 | 质量/可观测 | 评估、指标、审计 | `GoldenDatasetEvaluator`、`RagMetricsServiceImpl`、`AgentMetricsCollector`、`SecurityAuditAspect` |
 
@@ -105,7 +105,7 @@ LawMind 是一个面向法律领域的智能问答系统，核心链路为**意�
 | 渐进式降级 | 任一外部服务失败即降级，不中断请求 | Embedding 挂→纯全文；全文不可用→纯向量；两者都挂→LLM 直答 |
 | Redis 作向量库 | RediSearch FLAT/COSINE 索引，FLOAT32 小端存储 | 复用现有 Redis，小规模（<50 万条）够用，避免引入 Milvus/ES |
 | 模型分工 | qwen-plus 生成 / qwen-turbo 改写 / v2 向量 / rerank 精排 | 按任务复杂度选型，改写用便宜模型降本 |
-| 可插拔增强 | MemoryManager/ContextCompressor/SkillManager 均可空/可关 | 关闭增强时行为与原版完全一致，便于灰度 |
+| 可插拔增强 | MemoryManager/ContextCompressor 均可空/可关 | 关闭增强时行为与原版完全一致，便于灰度 |
 
 ---
 

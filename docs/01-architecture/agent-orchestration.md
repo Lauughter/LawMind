@@ -13,7 +13,7 @@
 | 子模块 | 关键类 | 说明 |
 |--------|--------|------|
 | 领域门控 | `DomainGate` | 是否法律问题（规则 + LLM 兜底，fail-open） |
-| 意图分类 | `IntentClassifierEnhanced` | 7 种意图，规则 + LLM 兜底 |
+| 意图分类 | `IntentClassifierEnhanced` | 6 种意图，规则 + LLM 兜底 |
 | 复杂度/路由 | `ComplexityAssessor` + `IntentRouter` | 四因子加权 → 三通道路由 |
 | 快速通道 | `FastChannelHandler` | 单次 LLM，无工具 |
 | Agent 循环 | `AgentRunner` | ReAct 循环 + 反射 `@Tool` 注册 |
@@ -159,7 +159,7 @@ for (iteration = 0; iteration < 5; iteration++) {
 | 项 | 状态 |
 |----|:---:|
 | DomainGate（规则 + LLM 兜底 + fail-open） | ✅ |
-| IntentClassifierEnhanced（7 意图） | ✅ |
+| IntentClassifierEnhanced（6 意图） | ✅ |
 | ComplexityAssessor + IntentRouter 决策矩阵 | ✅ |
 | Fast / Hybrid / Agent 三通道 | ✅ |
 | AgentRunner ReAct 循环 + 反射工具注册 | ✅ |
